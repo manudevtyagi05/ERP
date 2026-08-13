@@ -1,0 +1,95 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  * {
+    border-color: #e2e8f0;
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Jira Kanban drag & column aesthetics */
+.kanban-column {
+  background: #f1f5f9;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.kanban-card {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+
+.kanban-card:hover {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1px);
+}
+
+/* Subtle transitions for layout elements */
+.ant-layout-sider {
+  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+}
+
+/* Jira-style clean menu item styling */
+.jira-sidebar .ant-menu-item,
+.jira-sidebar .ant-menu-submenu-title {
+  border-radius: 6px !important;
+  margin: 2px 8px !important;
+  width: calc(100% - 16px) !important;
+  font-weight: 450 !important;
+  transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.jira-sidebar .ant-menu-item-selected {
+  font-weight: 600 !important;
+}
+
+/* Modern Ant Design Table custom styling */
+.jira-table .ant-table {
+  background: transparent;
+}
+
+.jira-table .ant-table-thead > tr > th {
+  background: #f8fafc !important;
+  color: #64748b !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.jira-table .ant-table-tbody > tr:hover > td {
+  background: #f8fafc !important;
+}
