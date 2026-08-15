@@ -95,8 +95,8 @@ function ProjectMembersPanel({ project }) {
       key: 'name',
       render: (_, record) => (
         <div className="flex items-center gap-2">
-          <Avatar size="small" icon={<UserOutlined />} />
-          <span className="text-xs font-medium text-slate-700">
+          <Avatar size="small" icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
+          <span className="text-xs font-medium text-slate-700 dark:text-slate-200">
             {record.user ? `${record.user.firstName} ${record.user.lastName}` : 'Unknown user'}
           </span>
         </div>
@@ -146,7 +146,7 @@ function ProjectMembersPanel({ project }) {
   return (
     <div className="flex flex-col gap-3 mt-2 max-w-3xl">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-500 !mb-0">People with explicit access to {project.name}.</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 !mb-0">People with explicit access to {project.name}.</p>
         <Button type="primary" size="small" icon={<PlusOutlined />} onClick={openAddModal} className="bg-blue-600">
           Add member
         </Button>

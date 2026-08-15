@@ -6,10 +6,8 @@ import {
   Input,
   Select,
   Button,
-  Tag,
   Avatar,
   Tooltip,
-  Space,
 } from 'antd';
 import {
   SearchOutlined,
@@ -28,7 +26,6 @@ function Work() {
   const { user } = useAuth();
   const {
     issues,
-    projects,
     moveIssueStatus,
     setSelectedIssueId,
     setCreateIssueModalOpen,
@@ -86,7 +83,7 @@ function Work() {
         const config = ISSUE_TYPES[type] || ISSUE_TYPES.Task;
         return (
           <Tooltip title={config.label}>
-            <span className="p-1 rounded bg-slate-100 flex items-center justify-center w-6 h-6">
+            <span className="p-1 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center w-6 h-6">
               {config.icon}
             </span>
           </Tooltip>
@@ -98,7 +95,7 @@ function Work() {
       dataIndex: 'key',
       width: 110,
       render: (key) => (
-        <span className="font-mono text-xs font-semibold text-slate-600 hover:text-blue-600">
+        <span className="font-mono text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400">
           {key}
         </span>
       ),
@@ -108,10 +105,10 @@ function Work() {
       dataIndex: 'title',
       render: (title, record) => (
         <div className="flex flex-col">
-          <span className="text-xs font-medium text-slate-800 hover:text-blue-600 transition">
+          <span className="text-xs font-medium text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition">
             {title}
           </span>
-          <span className="text-[11px] text-slate-400">{record.projectName}</span>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500">{record.projectName}</span>
         </div>
       ),
     },
@@ -122,7 +119,7 @@ function Work() {
       render: (priority) => {
         const config = ISSUE_PRIORITIES[priority] || ISSUE_PRIORITIES.MEDIUM;
         return (
-          <div className="flex items-center gap-1.5 text-xs text-slate-700">
+          <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
             {config.icon}
             <span>{config.label}</span>
           </div>
@@ -162,8 +159,8 @@ function Work() {
       dataIndex: 'dueDate',
       width: 130,
       render: (dueDate) => (
-        <span className="text-xs text-slate-600 flex items-center gap-1">
-          <CalendarOutlined className="text-slate-400" /> {dueDate}
+        <span className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1">
+          <CalendarOutlined className="text-slate-400 dark:text-slate-500" /> {dueDate}
         </span>
       ),
     },
@@ -173,8 +170,8 @@ function Work() {
       width: 160,
       render: (assignee) => (
         <div className="flex items-center gap-2">
-          <Avatar src={assignee?.avatar} size={22} icon={<UserOutlined />} />
-          <span className="text-xs text-slate-700 truncate">{assignee?.name || 'Unassigned'}</span>
+          <Avatar src={assignee?.avatar} size={22} icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
+          <span className="text-xs text-slate-700 dark:text-slate-300 truncate">{assignee?.name || 'Unassigned'}</span>
         </div>
       ),
     },
@@ -185,8 +182,8 @@ function Work() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight !mb-0">Your Work</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight !mb-0">Your Work</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Track tasks and issues assigned to you or created by you across all projects.
           </p>
         </div>
@@ -202,7 +199,7 @@ function Work() {
       </div>
 
       {/* Tabs & Filters */}
-      <div className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#131b2e] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <Tabs
           activeKey={filter}
           onChange={handleTabChange}
@@ -259,7 +256,7 @@ function Work() {
       </div>
 
       {/* Tasks Table */}
-      <Card bordered={false} className="shadow-sm border border-slate-200/80">
+      <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
         <Table
           rowKey="id"
           columns={columns}

@@ -48,7 +48,7 @@ function CreateIssueModal() {
 
   return (
     <Modal
-      title={<div className="text-base font-semibold text-slate-800">Create Issue</div>}
+      title={<div className="text-base font-semibold text-slate-800 dark:text-slate-100">Create Issue</div>}
       open={createIssueModalOpen}
       onCancel={handleCancel}
       onOk={() => form.submit()}
@@ -74,7 +74,7 @@ function CreateIssueModal() {
         <div className="grid grid-cols-2 gap-3">
           <Form.Item
             name="projectKey"
-            label={<span className="text-xs font-medium text-slate-600">Project</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project</span>}
             rules={[{ required: true, message: 'Please select a project' }]}
           >
             <Select
@@ -82,7 +82,7 @@ function CreateIssueModal() {
                 value: p.key,
                 label: (
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-semibold px-1 py-0.5 rounded bg-slate-100 text-slate-700">
+                    <span className="font-mono text-xs font-semibold px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                       {p.key}
                     </span>
                     <span className="truncate">{p.name}</span>
@@ -94,7 +94,7 @@ function CreateIssueModal() {
 
           <Form.Item
             name="type"
-            label={<span className="text-xs font-medium text-slate-600">Issue Type</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Issue Type</span>}
             rules={[{ required: true }]}
           >
             <Select
@@ -113,7 +113,7 @@ function CreateIssueModal() {
 
         <Form.Item
           name="title"
-          label={<span className="text-xs font-medium text-slate-600">Summary</span>}
+          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Summary</span>}
           rules={[{ required: true, message: 'Please enter issue summary' }]}
         >
           <Input placeholder="Short summary of the task, feature, or bug" />
@@ -121,7 +121,7 @@ function CreateIssueModal() {
 
         <Form.Item
           name="description"
-          label={<span className="text-xs font-medium text-slate-600">Description</span>}
+          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Description</span>}
         >
           <Input.TextArea
             rows={3}
@@ -132,7 +132,7 @@ function CreateIssueModal() {
         <div className="grid grid-cols-3 gap-3">
           <Form.Item
             name="priority"
-            label={<span className="text-xs font-medium text-slate-600">Priority</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Priority</span>}
             rules={[{ required: true }]}
           >
             <Select
@@ -150,7 +150,7 @@ function CreateIssueModal() {
 
           <Form.Item
             name="assigneeId"
-            label={<span className="text-xs font-medium text-slate-600">Assignee</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Assignee</span>}
             rules={[{ required: true }]}
           >
             <Select
@@ -167,7 +167,7 @@ function CreateIssueModal() {
 
           <Form.Item
             name="storyPoints"
-            label={<span className="text-xs font-medium text-slate-600">Story Points</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Story Points</span>}
           >
             <InputNumber min={1} max={21} style={{ width: '100%' }} />
           </Form.Item>
@@ -176,14 +176,14 @@ function CreateIssueModal() {
         <div className="grid grid-cols-2 gap-3">
           <Form.Item
             name="dueDate"
-            label={<span className="text-xs font-medium text-slate-600">Due Date</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Due Date</span>}
           >
             <DatePicker style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item
             name="milestoneId"
-            label={<span className="text-xs font-medium text-slate-600">Milestone</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Milestone</span>}
           >
             <Select
               allowClear

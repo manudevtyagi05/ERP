@@ -107,7 +107,7 @@ function Issues() {
         const config = ISSUE_TYPES[type] || ISSUE_TYPES.Task;
         return (
           <Tooltip title={config.label}>
-            <span className="p-1 rounded bg-slate-100 flex items-center justify-center w-6 h-6">
+            <span className="p-1 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center w-6 h-6">
               {config.icon}
             </span>
           </Tooltip>
@@ -119,7 +119,7 @@ function Issues() {
       dataIndex: 'key',
       width: 100,
       render: (key) => (
-        <span className="font-mono text-xs font-semibold text-blue-600 hover:underline">
+        <span className="font-mono text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
           {key}
         </span>
       ),
@@ -129,13 +129,13 @@ function Issues() {
       dataIndex: 'title',
       render: (title, record) => (
         <div className="flex flex-col">
-          <span className="text-xs font-medium text-slate-800 hover:text-blue-600 transition">
+          <span className="text-xs font-medium text-slate-800 dark:text-slate-100 hover:text-blue-600 dark:hover:text-blue-400 transition">
             {title}
           </span>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[11px] text-slate-400">{record.projectName}</span>
+            <span className="text-[11px] text-slate-400 dark:text-slate-500">{record.projectName}</span>
             {record.epic && (
-              <span className="text-[10px] text-purple-700 bg-purple-50 border border-purple-200/60 px-1 rounded">
+              <span className="text-[10px] text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border border-purple-200/60 dark:border-purple-800 px-1 rounded">
                 {record.epic}
               </span>
             )}
@@ -178,7 +178,7 @@ function Issues() {
       render: (priority) => {
         const config = ISSUE_PRIORITIES[priority] || ISSUE_PRIORITIES.MEDIUM;
         return (
-          <div className="flex items-center gap-1.5 text-xs text-slate-700">
+          <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
             {config.icon}
             <span>{config.label}</span>
           </div>
@@ -191,8 +191,8 @@ function Issues() {
       width: 150,
       render: (assignee) => (
         <div className="flex items-center gap-2">
-          <Avatar src={assignee?.avatar} size={22} icon={<UserOutlined />} />
-          <span className="text-xs text-slate-700 truncate">{assignee?.name || 'Unassigned'}</span>
+          <Avatar src={assignee?.avatar} size={22} icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
+          <span className="text-xs text-slate-700 dark:text-slate-300 truncate">{assignee?.name || 'Unassigned'}</span>
         </div>
       ),
     },
@@ -202,7 +202,7 @@ function Issues() {
       width: 90,
       align: 'center',
       render: (pts) => (
-        <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">
+        <span className="font-mono text-xs px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">
           {pts || 0}
         </span>
       ),
@@ -212,8 +212,8 @@ function Issues() {
       dataIndex: 'dueDate',
       width: 120,
       render: (dueDate) => (
-        <span className="text-xs text-slate-600 flex items-center gap-1">
-          <CalendarOutlined className="text-slate-400" /> {dueDate}
+        <span className="text-xs text-slate-600 dark:text-slate-400 flex items-center gap-1">
+          <CalendarOutlined className="text-slate-400 dark:text-slate-500" /> {dueDate}
         </span>
       ),
     },
@@ -224,8 +224,8 @@ function Issues() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight !mb-0">All Issues</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight !mb-0">All Issues</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Full issue tracker across all sprints, backlogs, and epics.
           </p>
         </div>
@@ -241,9 +241,9 @@ function Issues() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-sm flex flex-col gap-3">
+      <div className="bg-white dark:bg-[#131b2e] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-3">
         {/* Quick Status Buttons */}
-        <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5 overflow-x-auto">
+        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5 overflow-x-auto">
           {[
             { key: 'ALL', label: 'All Issues', count: issues.length },
             {
@@ -265,16 +265,18 @@ function Issues() {
             <button
               key={tab.key}
               onClick={() => handleStatusTab(tab.key)}
-              className={`text-xs px-3 py-1 rounded-md font-medium transition flex items-center gap-2 ${
+              className={`text-xs px-3 py-1 rounded-md font-medium transition flex items-center gap-2 cursor-pointer ${
                 statusParam === tab.key
-                  ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                  : 'bg-transparent text-slate-600 hover:bg-slate-50'
+                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                  : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               <span>{tab.label}</span>
               <span
                 className={`text-[11px] px-1.5 py-0.2 rounded-full ${
-                  statusParam === tab.key ? 'bg-blue-200/60 text-blue-800' : 'bg-slate-100 text-slate-500'
+                  statusParam === tab.key
+                    ? 'bg-blue-200/60 dark:bg-blue-800/60 text-blue-800 dark:text-blue-200'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                 }`}
               >
                 {tab.count}
@@ -360,7 +362,7 @@ function Issues() {
                 setAssigneeFilter('ALL');
                 setActiveProjectKey('ALL');
               }}
-              className="text-xs text-blue-600"
+              className="text-xs text-blue-600 dark:text-blue-400"
             >
               Reset
             </Button>
@@ -369,7 +371,7 @@ function Issues() {
       </div>
 
       {/* Issues Table */}
-      <Card bordered={false} className="shadow-sm border border-slate-200/80">
+      <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
         <Table
           rowKey="id"
           columns={columns}

@@ -21,6 +21,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { useProject } from '../../context/ProjectContext';
+import { useTheme } from '../../context/ThemeContext';
 import { ISSUE_TYPES, ISSUE_STATUSES, ISSUE_PRIORITIES } from '../../constants/jira';
 import { listMilestones } from '../../services/milestoneService';
 
@@ -38,6 +39,7 @@ function IssueDetailDrawer() {
     toggleSubtask,
     teamMembers,
   } = useProject();
+  const { isDark } = useTheme();
 
   const [commentText, setCommentText] = useState('');
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
@@ -65,9 +67,9 @@ function IssueDetailDrawer() {
         width={680}
         onClose={() => setSelectedIssueId(null)}
         open={Boolean(selectedIssueId)}
-        closeIcon={<CloseOutlined className="text-slate-400 hover:text-slate-700" />}
+        closeIcon={<CloseOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
       >
-        <div className="text-sm text-slate-400 text-center py-10">
+        <div className="text-sm text-slate-400 dark:text-slate-500 text-center py-10">
           {selectedIssueLoading ? 'Loading issue…' : 'Unable to load this issue.'}
         </div>
       </Drawer>
@@ -112,8 +114,6 @@ function IssueDetailDrawer() {
   const handleAssigneeChange = async (assigneeId) => {
     const assignee = teamMembers.find((m) => m.id === assigneeId);
     try {
-      // The backend resolves and validates the assignee from assigneeId alone —
-      // it never trusts a client-supplied assignee object.
       await reassignIssue(selectedIssue.id, assigneeId);
       message.success(`Assigned to ${assignee?.name || 'selected member'}`);
     } catch {
@@ -188,8 +188,8 @@ function IssueDetailDrawer() {
       title={
         <div className="flex items-center justify-between w-full pr-4">
           <div className="flex items-center gap-2">
-            <span className="p-1 rounded bg-slate-100 flex items-center">{issueTypeConfig.icon}</span>
-            <span className="font-mono font-semibold text-slate-700 text-sm">{selectedIssue.key}</span>
+            <span className="p-1 rounded bg-slate-100 dark:bg-slate-800 flex items-center">{issueTypeConfig.icon}</span>
+            <span className="font-mono font-semibold text-slate-700 dark:text-slate-200 text-sm">{selectedIssue.key}</span>
             <Tag color={issueTypeConfig.color} className="!mr-0">
               {issueTypeConfig.label}
             </Tag>
@@ -213,27 +213,30 @@ function IssueDetailDrawer() {
       width={680}
       onClose={handleClose}
       open={Boolean(selectedIssueId)}
-      closeIcon={<CloseOutlined className="text-slate-400 hover:text-slate-700" />}
+      closeIcon={<CloseOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
       styles={{
         body: { padding: '20px' },
-        header: { borderBottom: '1px solid #e2e8f0', padding: '12px 20px' },
+        header: {
+          borderBottom: isDark ? '1px solid #1e293b' : '1px solid #e2e8f0',
+          padding: '12px 20px',
+        },
       }}
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Main Content Column */}
         <div className="md:col-span-2 flex flex-col gap-5">
           <div>
-            <h1 className="text-lg font-semibold text-slate-900 leading-snug">
+            <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug">
               {selectedIssue.title}
             </h1>
           </div>
 
           {/* Description */}
           <div>
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+            <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
               Description
             </h3>
-            <div className="text-sm text-slate-700 bg-slate-50/80 p-3.5 rounded-md border border-slate-200/70 whitespace-pre-wrap leading-relaxed">
+            <div className="text-sm text-slate-700 dark:text-slate-200 bg-slate-50/80 dark:bg-slate-800/60 p-3.5 rounded-md border border-slate-200/70 dark:border-slate-700/60 whitespace-pre-wrap leading-relaxed">
               {selectedIssue.description || 'No description provided.'}
             </div>
           </div>
@@ -241,7 +244,7 @@ function IssueDetailDrawer() {
           {/* Subtasks Checklist */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                 Subtasks ({selectedIssue.subtasks?.filter((s) => s.completed).length || 0}/
                 {selectedIssue.subtasks?.length || 0})
               </h3>
@@ -251,27 +254,27 @@ function IssueDetailDrawer() {
                   size="small"
                   icon={<PlusOutlined />}
                   onClick={() => setIsAddingSubtask(true)}
-                  className="text-xs text-blue-600"
+                  className="text-xs text-blue-600 dark:text-blue-400"
                 >
                   Add Subtask
                 </Button>
               )}
             </div>
 
-            <div className="flex flex-col gap-1.5 bg-white border border-slate-200/80 rounded-md p-2">
+            <div className="flex flex-col gap-1.5 bg-white dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 rounded-md p-2">
               {(!selectedIssue.subtasks || selectedIssue.subtasks.length === 0) && !isAddingSubtask && (
-                <p className="text-xs text-slate-400 py-2 text-center">No subtasks yet</p>
+                <p className="text-xs text-slate-400 dark:text-slate-500 py-2 text-center">No subtasks yet</p>
               )}
               {selectedIssue.subtasks?.map((subtask) => (
                 <div
                   key={subtask.id}
-                  className="flex items-center justify-between p-1.5 hover:bg-slate-50 rounded text-xs text-slate-700 transition"
+                  className="flex items-center justify-between p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded text-xs text-slate-700 dark:text-slate-200 transition"
                 >
                   <Checkbox
                     checked={subtask.completed}
                     onChange={() => handleToggleSubtask(subtask.id)}
                   >
-                    <span className={subtask.completed ? 'line-through text-slate-400' : ''}>
+                    <span className={subtask.completed ? 'line-through text-slate-400 dark:text-slate-500' : ''}>
                       {subtask.title}
                     </span>
                   </Checkbox>
@@ -279,7 +282,7 @@ function IssueDetailDrawer() {
               ))}
 
               {isAddingSubtask && (
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
                   <Input
                     size="small"
                     placeholder="Subtask title..."
@@ -300,15 +303,15 @@ function IssueDetailDrawer() {
           </div>
 
           {/* Comments & Activity */}
-          <Divider className="!my-2" />
+          <Divider className="!my-2 dark:border-slate-800" />
           <div>
-            <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
               Activity & Comments
             </h3>
 
             <div className="flex flex-col gap-2.5 mb-4">
               {timeline.length === 0 && (
-                <div className="text-xs text-slate-400 text-center py-2">No activity yet.</div>
+                <div className="text-xs text-slate-400 dark:text-slate-500 text-center py-2">No activity yet.</div>
               )}
               {timeline.map((entry) =>
                 entry.kind === 'comment' ? (
@@ -317,26 +320,26 @@ function IssueDetailDrawer() {
                       src={entry.author?.avatar}
                       icon={<UserOutlined />}
                       size="small"
-                      className="mt-0.5"
+                      className="mt-0.5 bg-slate-200 dark:bg-slate-700"
                     />
-                    <div className="flex-1 bg-slate-50 border border-slate-200/60 rounded-md p-2.5 text-xs">
+                    <div className="flex-1 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-md p-2.5 text-xs">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-slate-800">{entry.author?.name}</span>
-                        <span className="text-slate-400 text-[11px]">
+                        <span className="font-semibold text-slate-800 dark:text-slate-200">{entry.author?.name}</span>
+                        <span className="text-slate-400 dark:text-slate-500 text-[11px]">
                           {entry.createdAt ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
                         </span>
                       </div>
-                      <p className="text-slate-700 leading-normal">{entry.content}</p>
+                      <p className="text-slate-700 dark:text-slate-300 leading-normal">{entry.content}</p>
                     </div>
                   </div>
                 ) : (
-                  <div key={entry.id} className="flex items-center gap-2.5 pl-1 text-[11px] text-slate-500">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 flex-shrink-0" />
+                  <div key={entry.id} className="flex items-center gap-2.5 pl-1 text-[11px] text-slate-500 dark:text-slate-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 flex-shrink-0" />
                     <span className="truncate">
-                      <span className="font-medium text-slate-600">{entry.actor?.name || 'Someone'}</span>{' '}
+                      <span className="font-medium text-slate-600 dark:text-slate-300">{entry.actor?.name || 'Someone'}</span>{' '}
                       {entry.message?.charAt(0).toLowerCase() + entry.message?.slice(1)}
                     </span>
-                    <span className="text-slate-400 flex-shrink-0 ml-auto">
+                    <span className="text-slate-400 dark:text-slate-500 flex-shrink-0 ml-auto">
                       {entry.createdAt ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                     </span>
                   </div>
@@ -366,9 +369,9 @@ function IssueDetailDrawer() {
         </div>
 
         {/* Sidebar / Meta Details Column */}
-        <div className="flex flex-col gap-4 bg-slate-50/60 p-3.5 rounded-lg border border-slate-200/60">
+        <div className="flex flex-col gap-4 bg-slate-50/60 dark:bg-slate-800/40 p-3.5 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
           <div>
-            <div className="text-xs font-medium text-slate-500 mb-1.5">Status</div>
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Status</div>
             <Select
               value={selectedIssue.status}
               onChange={handleStatusChange}
@@ -389,7 +392,7 @@ function IssueDetailDrawer() {
           </div>
 
           <div>
-            <div className="text-xs font-medium text-slate-500 mb-1.5">Assignee</div>
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Assignee</div>
             <Select
               value={selectedIssue.assignee?.id || selectedIssue.assignee?._id}
               onChange={handleAssigneeChange}
@@ -398,7 +401,7 @@ function IssueDetailDrawer() {
                 value: m.id,
                 label: (
                   <div className="flex items-center gap-2">
-                    <Avatar src={m.avatar} size={20} icon={<UserOutlined />} />
+                    <Avatar src={m.avatar} size={20} icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
                     <span className="truncate">{m.name}</span>
                   </div>
                 ),
@@ -407,7 +410,7 @@ function IssueDetailDrawer() {
           </div>
 
           <div>
-            <div className="text-xs font-medium text-slate-500 mb-1.5">Priority</div>
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Priority</div>
             <Select
               value={selectedIssue.priority}
               onChange={handlePriorityChange}
@@ -425,7 +428,7 @@ function IssueDetailDrawer() {
           </div>
 
           <div>
-            <div className="text-xs font-medium text-slate-500 mb-1.5">Milestone</div>
+            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Milestone</div>
             <Select
               value={selectedIssue.milestoneId || undefined}
               onChange={handleMilestoneChange}
@@ -436,44 +439,44 @@ function IssueDetailDrawer() {
             />
           </div>
 
-          <Divider className="!my-1" />
+          <Divider className="!my-1 dark:border-slate-700" />
 
           <div className="flex flex-col gap-2.5 text-xs">
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Project</span>
-              <span className="font-medium text-slate-800">{selectedIssue.projectName}</span>
+              <span className="text-slate-500 dark:text-slate-400">Project</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{selectedIssue.projectName}</span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Story Points</span>
-              <span className="font-mono font-medium px-2 py-0.5 rounded bg-slate-200 text-slate-800">
+              <span className="text-slate-500 dark:text-slate-400">Story Points</span>
+              <span className="font-mono font-medium px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
                 {selectedIssue.storyPoints || 0} pts
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Due Date</span>
-              <span className="font-medium text-slate-800 flex items-center gap-1">
-                <CalendarOutlined className="text-slate-400" /> {selectedIssue.dueDate}
+              <span className="text-slate-500 dark:text-slate-400">Due Date</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1">
+                <CalendarOutlined className="text-slate-400 dark:text-slate-500" /> {selectedIssue.dueDate}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Reporter</span>
-              <span className="font-medium text-slate-800">{selectedIssue.reporter?.name || 'Admin'}</span>
+              <span className="text-slate-500 dark:text-slate-400">Reporter</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">{selectedIssue.reporter?.name || 'Admin'}</span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-slate-500">Created</span>
-              <span className="font-medium text-slate-800">
+              <span className="text-slate-500 dark:text-slate-400">Created</span>
+              <span className="font-medium text-slate-800 dark:text-slate-200">
                 {selectedIssue.createdAt ? new Date(selectedIssue.createdAt).toLocaleDateString() : '—'}
               </span>
             </div>
 
             {selectedIssue.completedAt && (
               <div className="flex items-center justify-between">
-                <span className="text-slate-500">Completed</span>
-                <span className="font-medium text-emerald-700">
+                <span className="text-slate-500 dark:text-slate-400">Completed</span>
+                <span className="font-medium text-emerald-600 dark:text-emerald-400">
                   {new Date(selectedIssue.completedAt).toLocaleDateString()}
                 </span>
               </div>
@@ -482,10 +485,10 @@ function IssueDetailDrawer() {
 
           {selectedIssue.labels?.length > 0 && (
             <div className="mt-2">
-              <div className="text-xs font-medium text-slate-500 mb-1.5">Labels</div>
+              <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Labels</div>
               <div className="flex flex-wrap gap-1">
                 {selectedIssue.labels.map((label) => (
-                  <Tag key={label} className="!mr-0 text-[11px] font-normal text-slate-600 bg-white">
+                  <Tag key={label} className="!mr-0 text-[11px] font-normal text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
                     {label}
                   </Tag>
                 ))}

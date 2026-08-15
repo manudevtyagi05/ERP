@@ -22,9 +22,6 @@ function NotificationsView() {
 
   const handleNotificationClick = (n) => {
     markNotificationAsRead(n.id);
-    // Resolved directly by key (rather than looked up in the scoped `issues`
-    // list) since a notification can point at an issue outside the currently
-    // loaded "mine"/"all" scope — e.g. one reassigned away from this user.
     if (n.issueKey) {
       setSelectedIssueId(n.issueKey);
     }
@@ -40,8 +37,8 @@ function NotificationsView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight !mb-0">Notifications</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight !mb-0">Notifications</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Stay updated with issue assignments, status changes, and comments.
           </p>
         </div>
@@ -52,7 +49,7 @@ function NotificationsView() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-sm">
+      <div className="bg-white dark:bg-[#131b2e] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <Tabs
           activeKey={tab}
           onChange={setTab}
@@ -67,24 +64,26 @@ function NotificationsView() {
       </div>
 
       {/* List */}
-      <Card bordered={false} className="shadow-sm border border-slate-200/80 p-0">
-        <div className="flex flex-col divide-y divide-slate-100">
+      <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-0">
+        <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
           {filteredNotifications.map((n) => (
             <div
               key={n.id}
               onClick={() => handleNotificationClick(n)}
               className={`p-4 flex items-start justify-between gap-4 cursor-pointer transition ${
-                n.unread ? 'bg-blue-50/30 hover:bg-blue-50/50' : 'hover:bg-slate-50/70'
+                n.unread
+                  ? 'bg-blue-50/30 dark:bg-blue-950/30 hover:bg-blue-50/50 dark:hover:bg-blue-900/40'
+                  : 'hover:bg-slate-50/70 dark:hover:bg-slate-800/60'
               }`}
             >
               <div className="flex items-start gap-3">
                 <div
                   className={`w-9 h-9 rounded-full flex items-center justify-center text-base flex-shrink-0 ${
                     n.type === 'ASSIGNED'
-                      ? 'bg-blue-100 text-blue-600'
+                      ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400'
                       : n.type === 'COMMENT'
-                      ? 'bg-purple-100 text-purple-600'
-                      : 'bg-amber-100 text-amber-600'
+                      ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-600 dark:text-purple-400'
+                      : 'bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400'
                   }`}
                 >
                   {n.type === 'ASSIGNED' ? (
@@ -98,13 +97,13 @@ function NotificationsView() {
 
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs ${n.unread ? 'font-semibold text-slate-900' : 'font-medium text-slate-700'}`}>
+                    <span className={`text-xs ${n.unread ? 'font-semibold text-slate-900 dark:text-slate-100' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
                       {n.title}
                     </span>
                     {n.unread && <span className="w-2 h-2 rounded-full bg-blue-600" />}
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{n.description}</p>
-                  <span className="text-[11px] text-slate-400 mt-1 block">{n.time}</span>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{n.description}</p>
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 block">{n.time}</span>
                 </div>
               </div>
 
@@ -117,7 +116,7 @@ function NotificationsView() {
           ))}
 
           {filteredNotifications.length === 0 && (
-            <div className="p-8 text-center text-xs text-slate-400">
+            <div className="p-8 text-center text-xs text-slate-400 dark:text-slate-500">
               No notifications in this filter.
             </div>
           )}

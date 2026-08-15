@@ -1,9 +1,14 @@
 @import "tailwindcss";
 @config "../tailwind.config.js";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   * {
     border-color: #e2e8f0;
+  }
+  .dark * {
+    border-color: #334155;
   }
 }
 
@@ -18,6 +23,14 @@ body,
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #0b0f19;
+  color: #f1f5f9;
 }
 
 /* Custom subtle scrollbars */
@@ -39,11 +52,24 @@ body,
   background: #94a3b8;
 }
 
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
 /* Jira Kanban drag & column aesthetics */
 .kanban-column {
   background: #f1f5f9;
   border-radius: 8px;
   transition: background 0.15s ease;
+}
+
+html.dark .kanban-column {
+  background: #111827;
+  border: 1px solid #1e293b;
 }
 
 .kanban-card {
@@ -54,6 +80,17 @@ body,
 .kanban-card:hover {
   box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.04);
   transform: translateY(-1px);
+}
+
+html.dark .kanban-card {
+  background-color: #162035;
+  border-color: #1e293b;
+  color: #f1f5f9;
+}
+
+html.dark .kanban-card:hover {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
+  border-color: #3b82f6;
 }
 
 /* Subtle transitions for layout elements */
@@ -75,6 +112,11 @@ body,
   font-weight: 600 !important;
 }
 
+html.dark .jira-sidebar {
+  background: #0e1526 !important;
+  border-color: #1e293b !important;
+}
+
 /* Modern Ant Design Table custom styling */
 .jira-table .ant-table {
   background: transparent;
@@ -92,4 +134,14 @@ body,
 
 .jira-table .ant-table-tbody > tr:hover > td {
   background: #f8fafc !important;
+}
+
+html.dark .jira-table .ant-table-thead > tr > th {
+  background: #111827 !important;
+  color: #94a3b8 !important;
+  border-bottom: 1px solid #1e293b !important;
+}
+
+html.dark .jira-table .ant-table-tbody > tr:hover > td {
+  background: #182236 !important;
 }

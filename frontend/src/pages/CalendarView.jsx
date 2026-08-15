@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Calendar, Card, Button, Space } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useProject } from '../context/ProjectContext';
-import { ISSUE_TYPES, ISSUE_STATUSES } from '../constants/jira';
+import { ISSUE_STATUSES } from '../constants/jira';
 
 function CalendarView() {
   const { issues, setSelectedIssueId, setCreateIssueModalOpen, setViewScope } = useProject();
@@ -32,16 +32,16 @@ function CalendarView() {
                 e.stopPropagation();
                 setSelectedIssueId(item.id);
               }}
-              className="p-1 rounded bg-slate-50 border border-slate-200/80 hover:border-blue-400 cursor-pointer text-[11px] truncate flex items-center gap-1 transition"
+              className="p-1 rounded bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer text-[11px] truncate flex items-center gap-1 transition"
             >
               <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: statusConfig.badgeColor }} />
-              <span className="font-mono font-semibold text-slate-600 text-[10px]">{item.key}</span>
-              <span className="truncate text-slate-700">{item.title}</span>
+              <span className="font-mono font-semibold text-slate-600 dark:text-slate-400 text-[10px]">{item.key}</span>
+              <span className="truncate text-slate-700 dark:text-slate-200">{item.title}</span>
             </li>
           );
         })}
         {listData.length > 3 && (
-          <li className="text-[10px] text-slate-400 pl-1">+{listData.length - 3} more</li>
+          <li className="text-[10px] text-slate-400 dark:text-slate-500 pl-1">+{listData.length - 3} more</li>
         )}
       </ul>
     );
@@ -52,8 +52,8 @@ function CalendarView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight !mb-0">Release & Sprint Calendar</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight !mb-0">Release & Sprint Calendar</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Track issue delivery deadlines, sprint milestones, and release windows.
           </p>
         </div>
@@ -71,7 +71,7 @@ function CalendarView() {
       </div>
 
       {/* Calendar Card */}
-      <Card bordered={false} className="shadow-sm border border-slate-200/80 p-2">
+      <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-2">
         <Calendar cellRender={dateCellRender} />
       </Card>
     </div>

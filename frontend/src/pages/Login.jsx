@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Form, Input, Button, Card, Typography, Alert, Divider } from 'antd';
+import { Form, Input, Button, Card, Alert, Divider, App } from 'antd';
 import { MailOutlined, LockOutlined, ThunderboltFilled } from '@ant-design/icons';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { App } from 'antd';
 import { useAuth } from '../context/AuthContext';
 import { getErrorMessage } from '../utils/getErrorMessage';
+import ThemeToggle from '../components/common/ThemeToggle';
 
 function Login() {
   const { login } = useAuth();
@@ -35,22 +35,27 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#090d16] px-4 relative transition-colors">
+      {/* Floating Theme Toggle in top right */}
+      <div className="absolute top-4 right-4 z-10">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-sm flex flex-col gap-4">
         {/* Brand header */}
         <div className="flex flex-col items-center justify-center text-center">
           <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center text-xl shadow-sm mb-3">
             <ThunderboltFilled />
           </div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight !mb-0">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight !mb-0">
             Acme Platform
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
             Enterprise Project Management & ERP
           </p>
         </div>
 
-        <Card bordered={false} className="shadow-sm border border-slate-200/80 p-2">
+        <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-2">
           {error && (
             <Alert
               type="error"
@@ -70,7 +75,7 @@ function Login() {
             requiredMark={false}
           >
             <Form.Item
-              label={<span className="text-xs font-medium text-slate-600">Email Address</span>}
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Email Address</span>}
               name="email"
               rules={[
                 { required: true, message: 'Email is required' },
@@ -86,7 +91,7 @@ function Login() {
             </Form.Item>
 
             <Form.Item
-              label={<span className="text-xs font-medium text-slate-600">Password</span>}
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Password</span>}
               name="password"
               rules={[{ required: true, message: 'Password is required' }]}
             >
@@ -111,26 +116,26 @@ function Login() {
             </Form.Item>
           </Form>
 
-          <Divider className="!my-3">
-            <span className="text-[11px] text-slate-400 font-normal">Demo Access</span>
+          <Divider className="!my-3 dark:border-slate-800">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">Demo Access</span>
           </Divider>
 
-          <div className="flex flex-col gap-1.5 text-xs text-slate-600">
+          <div className="flex flex-col gap-1.5 text-xs text-slate-600 dark:text-slate-300">
             <button
               type="button"
               onClick={() => fillDemoCredentials('admin@company.com', 'admin123')}
-              className="w-full text-left p-2 rounded bg-slate-50 hover:bg-slate-100 border border-slate-200/60 text-xs transition flex items-center justify-between"
+              className="w-full text-left p-2 rounded bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-xs transition flex items-center justify-between cursor-pointer"
             >
               <div>
-                <span className="font-semibold text-slate-700">Admin Account</span>
-                <div className="text-[11px] text-slate-400">admin@company.com</div>
+                <span className="font-semibold text-slate-700 dark:text-slate-200">Admin Account</span>
+                <div className="text-[11px] text-slate-400 dark:text-slate-400">admin@company.com</div>
               </div>
-              <span className="text-[11px] text-blue-600 font-medium">Use</span>
+              <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">Use</span>
             </button>
           </div>
         </Card>
 
-        <div className="text-center text-[11px] text-slate-400">
+        <div className="text-center text-[11px] text-slate-400 dark:text-slate-500">
           Protected by enterprise SSO & RBAC security policies
         </div>
       </div>

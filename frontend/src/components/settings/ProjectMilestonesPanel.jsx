@@ -98,7 +98,7 @@ function ProjectMilestonesPanel({ project }) {
       title: 'Timeline',
       key: 'timeline',
       render: (_, record) => (
-        <span className="text-xs text-slate-500">
+        <span className="text-xs text-slate-500 dark:text-slate-400">
           {record.startDate || '—'} &rarr; {record.dueDate || '—'}
         </span>
       ),
@@ -113,7 +113,7 @@ function ProjectMilestonesPanel({ project }) {
       key: 'progress',
       render: (_, record) => (
         <div className="w-32">
-          <div className="flex justify-between text-[11px] text-slate-500 mb-0.5">
+          <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
             <span>
               {record.completedIssues}/{record.totalIssues} issues
             </span>
@@ -152,7 +152,7 @@ function ProjectMilestonesPanel({ project }) {
   return (
     <div className="flex flex-col gap-3 mt-2 max-w-3xl">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-slate-500 !mb-0">Key delivery checkpoints for {project.name}.</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400 !mb-0">Key delivery checkpoints for {project.name}.</p>
         <Button type="primary" size="small" icon={<PlusOutlined />} onClick={openCreate} className="bg-blue-600">
           Add milestone
         </Button>

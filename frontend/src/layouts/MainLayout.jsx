@@ -29,10 +29,14 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   ThunderboltFilled,
+  SunOutlined,
+  MoonOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useProject } from '../context/ProjectContext';
+import { useTheme } from '../context/ThemeContext';
+import ThemeToggle from '../components/common/ThemeToggle';
 import CreateIssueModal from '../components/issues/CreateIssueModal';
 import IssueDetailDrawer from '../components/issues/IssueDetailDrawer';
 import { listMilestones } from '../services/milestoneService';
@@ -46,6 +50,7 @@ function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout, hasPermission } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const {
     projects,
     activeProjectKey,
@@ -128,7 +133,7 @@ function MainLayout() {
     },
     {
       type: 'divider',
-      style: { margin: '8px 12px', borderColor: '#f1f5f9' },
+      style: { margin: '8px 12px', borderColor: isDark ? '#1e293b' : '#f1f5f9' },
     },
     hasPermission(PERMISSIONS.USER_READ) && {
       key: '/teams',
@@ -167,10 +172,10 @@ function MainLayout() {
       key: 'user-header',
       label: (
         <div className="py-1 px-1">
-          <div className="font-semibold text-slate-800 text-sm">
+          <div className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
             {[user?.firstName, user?.lastName].filter(Boolean).join(' ')}
           </div>
-          <div className="text-xs text-slate-500">{user?.email}</div>
+          <div className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</div>
           <div className="mt-1">
             <Tag color="blue" className="text-[11px] font-normal !mr-0">
               {user?.role}
@@ -181,6 +186,12 @@ function MainLayout() {
       disabled: true,
     },
     { type: 'divider' },
+    {
+      key: 'theme-toggle',
+      icon: isDark ? <SunOutlined className="text-amber-500" /> : <MoonOutlined className="text-indigo-400" />,
+      label: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
+      onClick: toggleTheme,
+    },
     {
       key: 'settings',
       icon: <SettingOutlined />,
@@ -202,8 +213,8 @@ function MainLayout() {
       key: 'ALL',
       label: (
         <div className="flex items-center justify-between gap-4 py-1">
-          <span className="font-medium">All Workspaces</span>
-          {activeProjectKey === 'ALL' && <span className="text-blue-600 text-xs">Active</span>}
+          <span className="font-medium text-slate-800 dark:text-slate-200">All Workspaces</span>
+          {activeProjectKey === 'ALL' && <span className="text-blue-500 text-xs font-semibold">Active</span>}
         </div>
       ),
       onClick: () => setActiveProjectKey('ALL'),
@@ -214,12 +225,12 @@ function MainLayout() {
       label: (
         <div className="flex items-center justify-between gap-4 py-1">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+            <span className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
               {p.key}
             </span>
-            <span className="text-slate-800 text-xs font-medium">{p.name}</span>
+            <span className="text-slate-800 dark:text-slate-200 text-xs font-medium">{p.name}</span>
           </div>
-          {activeProjectKey === p.key && <span className="text-blue-600 text-xs">Active</span>}
+          {activeProjectKey === p.key && <span className="text-blue-500 text-xs font-semibold">Active</span>}
         </div>
       ),
       onClick: () => setActiveProjectKey(p.key),
@@ -258,7 +269,7 @@ function MainLayout() {
     : [];
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f8fafc' }}>
+    <Layout className="min-h-screen bg-slate-50 dark:bg-[#090d16]">
       {/* Collapsible Left Sidebar */}
       <Sider
         collapsible
@@ -267,11 +278,11 @@ function MainLayout() {
         trigger={null}
         width={250}
         collapsedWidth={64}
-        className="jira-sidebar border-r border-slate-200/80 !bg-white sticky top-0 h-screen overflow-y-auto select-none"
+        className="jira-sidebar border-r border-slate-200/80 dark:border-slate-800 !bg-white dark:!bg-[#0e1526] sticky top-0 h-screen overflow-y-auto select-none"
         style={{ zIndex: 50 }}
       >
         {/* Brand / Workspace Switcher */}
-        <div className="h-14 border-b border-slate-100 flex items-center px-4 justify-between">
+        <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center px-4 justify-between">
           <Dropdown menu={{ items: projectMenuItems }} trigger={['click']} placement="bottomLeft">
             <div className="flex items-center gap-2.5 cursor-pointer overflow-hidden group">
               <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
@@ -279,10 +290,10 @@ function MainLayout() {
               </div>
               {!collapsed && (
                 <div className="truncate flex flex-col">
-                  <span className="font-semibold text-slate-800 text-sm leading-tight truncate group-hover:text-blue-600 transition">
+                  <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight truncate group-hover:text-blue-500 transition">
                     {activeProject ? activeProject.name : 'Enterprise ERP'}
                   </span>
-                  <span className="text-[11px] text-slate-400 font-mono">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
                     {activeProject ? activeProject.key : 'Software Project'}
                   </span>
                 </div>
@@ -294,7 +305,7 @@ function MainLayout() {
             <Button
               type="text"
               size="small"
-              icon={<MenuFoldOutlined className="text-slate-400 hover:text-slate-700" />}
+              icon={<MenuFoldOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
               onClick={() => setCollapsed(true)}
               className="!w-7 !h-7 flex items-center justify-center !p-0"
             />
@@ -303,11 +314,11 @@ function MainLayout() {
 
         {/* Collapsed expand button */}
         {collapsed && (
-          <div className="py-2 flex justify-center border-b border-slate-100">
+          <div className="py-2 flex justify-center border-b border-slate-100 dark:border-slate-800">
             <Button
               type="text"
               size="small"
-              icon={<MenuUnfoldOutlined className="text-slate-400 hover:text-slate-700" />}
+              icon={<MenuUnfoldOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
               onClick={() => setCollapsed(false)}
             />
           </div>
@@ -326,44 +337,44 @@ function MainLayout() {
               }
             }}
             inlineIndent={16}
-            className="!border-none"
+            className="!border-none !bg-transparent"
           />
         </div>
 
         {/* Sidebar Footer: nearest upcoming milestone for the active project */}
         {!collapsed && upcomingMilestone && (
-          <div className="p-3 mx-3 my-4 rounded-lg bg-slate-50 border border-slate-200/60">
-            <div className="flex items-center justify-between text-xs text-slate-600 mb-1 font-medium">
+          <div className="p-3 mx-3 my-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
+            <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 mb-1 font-medium">
               <span className="truncate">{upcomingMilestone.name}</span>
-              <span className="text-blue-600">{upcomingMilestone.progress}%</span>
+              <span className="text-blue-600 dark:text-blue-400">{upcomingMilestone.progress}%</span>
             </div>
-            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-blue-600 h-full rounded-full" style={{ width: `${upcomingMilestone.progress}%` }} />
+            <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+              <div className="bg-blue-600 dark:bg-blue-500 h-full rounded-full" style={{ width: `${upcomingMilestone.progress}%` }} />
             </div>
             {upcomingMilestone.dueDate && (
-              <div className="text-[11px] text-slate-400 mt-1">Due {upcomingMilestone.dueDate}</div>
+              <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Due {upcomingMilestone.dueDate}</div>
             )}
           </div>
         )}
       </Sider>
 
       {/* Main Layout Container */}
-      <Layout style={{ background: '#f8fafc' }}>
+      <Layout className="!bg-slate-50 dark:!bg-[#090d16]">
         {/* Header Bar */}
-        <Header className="!bg-white border-b border-slate-200/80 px-6 h-14 flex items-center justify-between sticky top-0 z-40">
+        <Header className="!bg-white dark:!bg-[#0e1526] border-b border-slate-200/80 dark:border-slate-800 px-6 h-14 flex items-center justify-between sticky top-0 z-40 transition-colors">
           {/* Left: Breadcrumbs & Collapse icon */}
           <div className="flex items-center gap-4">
             {collapsed && (
               <Button
                 type="text"
                 size="small"
-                icon={<MenuUnfoldOutlined className="text-slate-500" />}
+                icon={<MenuUnfoldOutlined className="text-slate-500 dark:text-slate-400" />}
                 onClick={() => setCollapsed(false)}
               />
             )}
             <Breadcrumb
               items={getBreadcrumbs().map((b) => ({
-                title: <span className="text-xs text-slate-500">{b.title}</span>,
+                title: <span className="text-xs text-slate-500 dark:text-slate-400">{b.title}</span>,
               }))}
             />
           </div>
@@ -378,13 +389,13 @@ function MainLayout() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 allowClear
-                className="w-56 md:w-72 text-xs bg-slate-50 border-slate-200 rounded-md focus:bg-white transition"
+                className="w-56 md:w-72 text-xs bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-md focus:bg-white dark:focus:bg-slate-800 dark:text-slate-100 transition"
               />
 
               {/* Quick Search Dropdown Result Panel */}
               {searchQuery.trim() && (
-                <div className="absolute right-0 top-full mt-1.5 w-80 bg-white border border-slate-200 rounded-lg shadow-lg p-2 z-50">
-                  <div className="text-[11px] font-semibold text-slate-400 px-2 py-1 uppercase tracking-wider">
+                <div className="absolute right-0 top-full mt-1.5 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-2 z-50">
+                  <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-400 px-2 py-1 uppercase tracking-wider">
                     Matching Issues ({matchingIssues.length})
                   </div>
                   {matchingIssues.length === 0 ? (
@@ -398,13 +409,13 @@ function MainLayout() {
                             setSelectedIssueId(issue.id);
                             setSearchQuery('');
                           }}
-                          className="flex items-center justify-between p-2 rounded hover:bg-slate-50 cursor-pointer text-xs transition"
+                          className="flex items-center justify-between p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer text-xs transition"
                         >
                           <div className="flex items-center gap-2 truncate">
-                            <span className="font-mono text-[11px] font-semibold text-blue-600">
+                            <span className="font-mono text-[11px] font-semibold text-blue-600 dark:text-blue-400">
                               {issue.key}
                             </span>
-                            <span className="truncate text-slate-700">{issue.title}</span>
+                            <span className="truncate text-slate-700 dark:text-slate-200">{issue.title}</span>
                           </div>
                           <Tag className="!mr-0 text-[10px] scale-90">{issue.status}</Tag>
                         </div>
@@ -425,16 +436,19 @@ function MainLayout() {
               Create
             </Button>
 
+            {/* Theme Toggle Button */}
+            <ThemeToggle />
+
             {/* Notifications Button */}
             <Button
               type="text"
               icon={
                 <Badge count={unreadCount} size="small" offset={[2, -2]} color="#2563eb">
-                  <BellOutlined className="text-slate-600 text-base" />
+                  <BellOutlined className="text-slate-600 dark:text-slate-300 text-base" />
                 </Badge>
               }
               onClick={() => navigate('/notifications')}
-              className="!w-9 !h-9 flex items-center justify-center rounded-md hover:bg-slate-100"
+              className="!w-9 !h-9 flex items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
             />
 
             {/* User Profile */}
@@ -443,9 +457,9 @@ function MainLayout() {
                 <Avatar
                   icon={<UserOutlined />}
                   size={32}
-                  className="border border-slate-200"
+                  className="border border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-700"
                 />
-                <span className="hidden md:inline text-xs font-semibold text-slate-700">
+                <span className="hidden md:inline text-xs font-semibold text-slate-700 dark:text-slate-200">
                   {[user?.firstName, user?.lastName].filter(Boolean).join(' ')}
                 </span>
               </div>

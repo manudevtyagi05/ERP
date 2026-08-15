@@ -95,8 +95,8 @@ function Projects() {
             {record.key}
           </div>
           <div>
-            <div className="font-semibold text-slate-800 text-xs">{record.name}</div>
-            <div className="text-[11px] text-slate-400">{record.category}</div>
+            <div className="font-semibold text-slate-800 dark:text-slate-100 text-xs">{record.name}</div>
+            <div className="text-[11px] text-slate-400 dark:text-slate-500">{record.category}</div>
           </div>
         </div>
       ),
@@ -105,7 +105,7 @@ function Projects() {
       title: 'Key',
       dataIndex: 'key',
       render: (key) => (
-        <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+        <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
           {key}
         </span>
       ),
@@ -115,8 +115,8 @@ function Projects() {
       key: 'lead',
       render: (_, record) => (
         <div className="flex items-center gap-2">
-          <Avatar src={record.leadAvatar} size="small" icon={<UserOutlined />} />
-          <span className="text-xs text-slate-700">{record.lead}</span>
+          <Avatar src={record.leadAvatar} size="small" icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
+          <span className="text-xs text-slate-700 dark:text-slate-300">{record.lead}</span>
         </div>
       ),
     },
@@ -125,7 +125,7 @@ function Projects() {
       key: 'progress',
       render: (_, record) => (
         <div className="w-36">
-          <div className="flex justify-between text-[11px] text-slate-500 mb-0.5">
+          <div className="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mb-0.5">
             <span>{record.completedIssues}/{record.totalIssues} issues</span>
             <span className="font-medium">{record.progress}%</span>
           </div>
@@ -167,8 +167,8 @@ function Projects() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight !mb-0">Projects</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight !mb-0">Projects</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Manage project roadmaps, teams, and track overall development progress.
           </p>
         </div>
@@ -184,7 +184,7 @@ function Projects() {
       </div>
 
       {/* Tabs & Filter Bar */}
-      <div className="bg-white p-3 rounded-lg border border-slate-200/80 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div className="bg-white dark:bg-[#131b2e] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <Tabs
           activeKey={currentTab}
           onChange={handleTabChange}
@@ -228,7 +228,7 @@ function Projects() {
             <Card
               key={project.id}
               bordered={false}
-              className="shadow-sm border border-slate-200/80 hover:border-blue-400 hover:shadow-md transition cursor-pointer flex flex-col justify-between"
+              className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between"
               onClick={() => {
                 setActiveProjectKey(project.key);
                 navigate('/board');
@@ -245,10 +245,10 @@ function Projects() {
                       {project.key}
                     </div>
                     <div>
-                      <h3 className="text-sm font-semibold text-slate-800 line-clamp-1">
+                      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 line-clamp-1">
                         {project.name}
                       </h3>
-                      <span className="text-[11px] text-slate-400">{project.category}</span>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500">{project.category}</span>
                     </div>
                   </div>
 
@@ -272,25 +272,25 @@ function Projects() {
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed min-h-[36px]">
+                <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed min-h-[36px]">
                   {project.description || 'Enterprise project workspace.'}
                 </p>
               </div>
 
               {/* Footer details */}
-              <div className="mt-4 pt-3 border-t border-slate-100">
+              <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-slate-500">Progress</span>
-                  <span className="font-semibold text-slate-700">{project.progress}%</span>
+                  <span className="text-slate-500 dark:text-slate-400">Progress</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">{project.progress}%</span>
                 </div>
                 <Progress percent={project.progress} size="small" showInfo={false} />
 
-                <div className="flex items-center justify-between mt-3 text-xs text-slate-500">
+                <div className="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
                   <div className="flex items-center gap-1.5">
-                    <Avatar src={project.leadAvatar} size={20} icon={<UserOutlined />} />
-                    <span className="truncate max-w-[100px] text-[11px]">{project.lead}</span>
+                    <Avatar src={project.leadAvatar} size={20} icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
+                    <span className="truncate max-w-[100px] text-[11px] text-slate-700 dark:text-slate-300">{project.lead}</span>
                   </div>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
                     {project.completedIssues}/{project.totalIssues} issues
                   </span>
                 </div>
@@ -299,13 +299,13 @@ function Projects() {
           ))}
 
           {filteredProjects.length === 0 && (
-            <div className="col-span-full bg-white p-8 rounded-lg border border-slate-200 text-center text-slate-400 text-xs">
+            <div className="col-span-full bg-white dark:bg-[#131b2e] p-8 rounded-lg border border-slate-200 dark:border-slate-800 text-center text-slate-400 dark:text-slate-500 text-xs">
               No projects matching your search criteria.
             </div>
           )}
         </div>
       ) : (
-        <Card bordered={false} className="shadow-sm border border-slate-200/80">
+        <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
           <Table
             rowKey="id"
             columns={columns}

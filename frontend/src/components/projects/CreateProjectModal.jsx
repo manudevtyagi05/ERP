@@ -32,7 +32,7 @@ function CreateProjectModal({ open, onCancel }) {
 
   return (
     <Modal
-      title={<div className="text-base font-semibold text-slate-800">Create Project</div>}
+      title={<div className="text-base font-semibold text-slate-800 dark:text-slate-100">Create Project</div>}
       open={open}
       onCancel={() => {
         form.resetFields();
@@ -57,7 +57,7 @@ function CreateProjectModal({ open, onCancel }) {
       >
         <Form.Item
           name="name"
-          label={<span className="text-xs font-medium text-slate-600">Project Name</span>}
+          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Name</span>}
           rules={[{ required: true, message: 'Please enter project name' }]}
         >
           <Input
@@ -80,7 +80,7 @@ function CreateProjectModal({ open, onCancel }) {
         <div className="grid grid-cols-2 gap-3">
           <Form.Item
             name="key"
-            label={<span className="text-xs font-medium text-slate-600">Project Key Prefix</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Key Prefix</span>}
             rules={[
               { required: true, message: 'Please enter project key prefix' },
               { max: 6, message: 'Max 6 characters' },
@@ -91,7 +91,7 @@ function CreateProjectModal({ open, onCancel }) {
 
           <Form.Item
             name="category"
-            label={<span className="text-xs font-medium text-slate-600">Category</span>}
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Category</span>}
             rules={[{ required: true }]}
           >
             <Select
@@ -108,7 +108,7 @@ function CreateProjectModal({ open, onCancel }) {
 
         <Form.Item
           name="lead"
-          label={<span className="text-xs font-medium text-slate-600">Project Lead</span>}
+          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Lead</span>}
           rules={[{ required: true }]}
         >
           <Select
@@ -121,7 +121,7 @@ function CreateProjectModal({ open, onCancel }) {
 
         <Form.Item
           name="description"
-          label={<span className="text-xs font-medium text-slate-600">Description</span>}
+          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Description</span>}
         >
           <Input.TextArea rows={3} placeholder="Brief purpose and deliverables of this project..." />
         </Form.Item>
