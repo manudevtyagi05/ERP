@@ -1,75 +1,96 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Card,
   Tabs,
   Form,
   Input,
   Button,
-  Select,
   Switch,
-  Alert,
   Avatar,
   Tag,
-  Tooltip,
+  Divider,
   App,
 } from 'antd';
 import {
-  SaveOutlined,
-  SettingOutlined,
-  BellOutlined,
-  ApartmentOutlined,
-  TeamOutlined,
-  FlagOutlined,
+  UserOutlined,
   BgColorsOutlined,
+  BellOutlined,
+  LockOutlined,
+  SaveOutlined,
   SunOutlined,
   MoonOutlined,
   DesktopOutlined,
   CheckCircleFilled,
-  CrownOutlined,
-  UserOutlined,
+  SafetyCertificateOutlined,
+  MailOutlined,
+  ApartmentOutlined,
 } from '@ant-design/icons';
-import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { getErrorMessage } from '../utils/getErrorMessage';
-import { updateNotificationPreferencesRequest } from '../services/authService';
-import ProjectMembersPanel from '../components/settings/ProjectMembersPanel';
-import ProjectMilestonesPanel from '../components/settings/ProjectMilestonesPanel';
+import {
+  updateNotificationPreferencesRequest,
+  updateProfileRequest,
+  changePasswordRequest,
+} from '../services/authService';
 
 function SettingsView() {
-  const { activeProject, updateProject } = useProject();
   const { user, updateUser } = useAuth();
   const { themeMode, setThemeMode, isDark } = useTheme();
-  const [form] = Form.useForm();
+  const [profileForm] = Form.useForm();
+  const [securityForm] = Form.useForm();
   const { message } = App.useApp();
 
-  const handleSave = async (values) => {
-    if (!activeProject) {
-      message.warning('Select a project from the switcher above to save changes.');
-      return;
-    }
-    try {
-      await updateProject(activeProject.id, {
-        name: values.projectName,
-        category: values.category,
-        description: values.description,
-        // Note: project lead is no longer a free-text field.
-        // Manage leads through the Members tab → PROJECT_LEAD role.
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [savingSecurity, setSavingSecurity] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      profileForm.setFieldsValue({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        department: user.department || '',
       });
-      message.success('Settings updated successfully');
+    }
+  }, [user, profileForm]);
+
+  const handleSaveProfile = async (values) => {
+    setSavingProfile(true);
+    try {
+      const updatedUser = await updateProfileRequest({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        department: values.department,
+      });
+      updateUser(updatedUser);
+      message.success('Profile updated successfully');
     } catch (err) {
-      message.error(getErrorMessage(err, 'Could not update project settings'));
+      message.error(getErrorMessage(err, 'Could not update profile'));
+    } finally {
+      setSavingProfile(false);
     }
   };
 
-  useEffect(() => {
-    form.setFieldsValue({
-      projectName: activeProject?.name,
-      projectKey: activeProject?.key,
-      category: activeProject?.category,
-      description: activeProject?.description,
-    });
-  }, [activeProject, form]);
+  const handleChangePassword = async (values) => {
+    if (values.newPassword !== values.confirmPassword) {
+      message.error('New passwords do not match');
+      return;
+    }
+    setSavingSecurity(true);
+    try {
+      await changePasswordRequest({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
+      message.success('Password changed successfully');
+      securityForm.resetFields();
+    } catch (err) {
+      message.error(getErrorMessage(err, 'Could not change password'));
+    } finally {
+      setSavingSecurity(false);
+    }
+  };
 
   const handlePreferenceChange = async (key, checked) => {
     try {
@@ -87,21 +108,18 @@ function SettingsView() {
       title: 'Light Theme',
       description: 'Clean, high-clarity appearance for daytime work.',
       icon: <SunOutlined className="text-xl text-amber-500" />,
-      previewBg: 'bg-slate-50 border-slate-200 text-slate-800',
     },
     {
       key: 'dark',
       title: 'Dark Theme',
       description: 'Sleek, deep-slate palette designed for low eye strain.',
       icon: <MoonOutlined className="text-xl text-indigo-400" />,
-      previewBg: 'bg-[#0f172a] border-slate-700 text-slate-100',
     },
     {
       key: 'system',
       title: 'System Default',
       description: 'Automatically synchronizes with your OS appearance.',
       icon: <DesktopOutlined className="text-xl text-blue-500" />,
-      previewBg: 'bg-gradient-to-r from-slate-100 to-slate-800 border-slate-300 text-slate-800',
     },
   ];
 
@@ -109,124 +127,104 @@ function SettingsView() {
     <div className="flex flex-col gap-5 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight !mb-0">Settings</h1>
+        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100 tracking-tight !mb-0">
+          Account Settings
+        </h1>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-          Configure project parameters, workflow statuses, appearance, access permissions, and notifications.
+          Manage your personal profile, interface appearance, notifications, and account security.
         </p>
       </div>
 
       <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
         <Tabs
-          defaultActiveKey="general"
+          defaultActiveKey="profile"
           items={[
             {
-              key: 'general',
+              key: 'profile',
               label: (
                 <span className="flex items-center gap-1.5">
-                  <SettingOutlined /> General
+                  <UserOutlined /> Profile
                 </span>
               ),
               children: (
-                <div>
-                  {!activeProject && (
-                    <Alert
-                      type="warning"
-                      showIcon
-                      message="No project selected"
-                      description="Select a project from the switcher in the top bar to edit and save its settings."
-                      className="mb-4 max-w-2xl"
+                <div className="pt-2 max-w-2xl flex flex-col gap-6">
+                  {/* User summary card header */}
+                  <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40">
+                    <Avatar
+                      size={54}
+                      icon={<UserOutlined />}
+                      className="bg-blue-600 text-white font-semibold text-xl border-2 border-white dark:border-slate-700 shadow-sm flex-shrink-0"
                     />
-                  )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-800 dark:text-slate-100 text-base">
+                          {[user?.firstName, user?.lastName].filter(Boolean).join(' ')}
+                        </span>
+                        <Tag color="blue" className="text-xs font-medium">
+                          {user?.role}
+                        </Tag>
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+                        <MailOutlined className="text-slate-400" />
+                        <span>{user?.email}</span>
+                      </div>
+                      {user?.department && (
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
+                          <ApartmentOutlined className="text-slate-400" />
+                          <span>{user?.department}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
                   <Form
-                    form={form}
+                    form={profileForm}
                     layout="vertical"
-                    disabled={!activeProject}
-                    initialValues={{
-                      projectName: activeProject?.name,
-                      projectKey: activeProject?.key,
-                      category: activeProject?.category,
-                      description: activeProject?.description,
-                    }}
-                    onFinish={handleSave}
-                    className="max-w-2xl mt-2"
+                    onFinish={handleSaveProfile}
                     requiredMark={false}
                   >
                     <div className="grid grid-cols-2 gap-4">
                       <Form.Item
-                        name="projectName"
-                        label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Name</span>}
-                        rules={[{ required: true }]}
+                        name="firstName"
+                        label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">First Name</span>}
+                        rules={[{ required: true, message: 'First name is required' }]}
                       >
                         <Input />
                       </Form.Item>
 
                       <Form.Item
-                        name="projectKey"
-                        label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Key Prefix</span>}
-                        rules={[{ required: true }]}
+                        name="lastName"
+                        label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Last Name</span>}
+                        rules={[{ required: true, message: 'Last name is required' }]}
                       >
-                        <Input disabled />
+                        <Input />
                       </Form.Item>
                     </div>
 
-                    <Form.Item
-                      name="category"
-                      label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Category</span>}
+                    <div className="grid grid-cols-2 gap-4">
+                      <Form.Item
+                        name="email"
+                        label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Email Address</span>}
+                      >
+                        <Input disabled />
+                      </Form.Item>
+
+                      <Form.Item
+                        name="department"
+                        label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Department / Designation</span>}
+                      >
+                        <Input placeholder="e.g. Engineering, Product, QA" />
+                      </Form.Item>
+                    </div>
+
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      icon={<SaveOutlined />}
+                      loading={savingProfile}
+                      className="bg-blue-600 mt-2"
                     >
-                      <Select
-                        options={[
-                          { value: 'Software Architecture', label: 'Software Architecture' },
-                          { value: 'Design Engineering', label: 'Design Engineering' },
-                          { value: 'Fintech Service', label: 'Fintech Service' },
-                          { value: 'DevOps & Reliability', label: 'DevOps & Reliability' },
-                        ]}
-                      />
-                    </Form.Item>
-
-                    {/* Project leads — display-only; managed via the Members tab */}
-                    {activeProject && (
-                      <div className="mb-4">
-                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1.5">
-                          Project Lead(s)
-                        </label>
-                        <div className="flex flex-wrap gap-2 p-2.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 min-h-[36px]">
-                          {activeProject.projectLeads && activeProject.projectLeads.length > 0 ? (
-                            activeProject.projectLeads.map((lead) => (
-                              <Tooltip key={lead.id} title={lead.email}>
-                                <Tag
-                                  icon={<CrownOutlined className="text-amber-500" />}
-                                  className="flex items-center gap-1 text-xs"
-                                >
-                                  <Avatar
-                                    size={14}
-                                    icon={<UserOutlined />}
-                                    className="bg-blue-500 mr-1"
-                                  />
-                                  {lead.name}
-                                </Tag>
-                              </Tooltip>
-                            ))
-                          ) : (
-                            <span className="text-xs text-slate-400">
-                              No project leads assigned. Add a member with the PROJECT_LEAD role in the Members tab.
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-400 mt-1">
-                          Manage project leads in the <strong>Members</strong> tab by assigning the PROJECT_LEAD role.
-                        </p>
-                      </div>
-                    )}
-
-                    <Form.Item
-                      name="description"
-                      label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Description</span>}
-                    >
-                      <Input.TextArea rows={3} />
-                    </Form.Item>
-
-                    <Button type="primary" htmlType="submit" icon={<SaveOutlined />} className="bg-blue-600">
-                      Save Changes
+                      Save Profile
                     </Button>
                   </Form>
                 </div>
@@ -300,66 +298,6 @@ function SettingsView() {
               ),
             },
             {
-              key: 'members',
-              label: (
-                <span className="flex items-center gap-1.5">
-                  <TeamOutlined /> Members
-                </span>
-              ),
-              children: <ProjectMembersPanel project={activeProject} />,
-            },
-            {
-              key: 'milestones',
-              label: (
-                <span className="flex items-center gap-1.5">
-                  <FlagOutlined /> Milestones
-                </span>
-              ),
-              children: <ProjectMilestonesPanel project={activeProject} />,
-            },
-            {
-              key: 'workflows',
-              label: (
-                <span className="flex items-center gap-1.5">
-                  <ApartmentOutlined /> Workflow Stages
-                </span>
-              ),
-              children: (
-                <div className="flex flex-col gap-4 mt-2 max-w-2xl">
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Every issue moves through this fixed pipeline. Stages are not currently customizable.
-                  </p>
-
-                  <div className="flex flex-col gap-2">
-                    {[
-                      { name: 'Backlog', color: '#94a3b8', desc: 'Initial triage & idea backlog' },
-                      { name: 'To Do', color: '#60a5fa', desc: 'Committed work not yet started' },
-                      { name: 'In Progress', color: '#3b82f6', desc: 'Under active engineering development' },
-                      { name: 'In Review', color: '#f59e0b', desc: 'Code review & QA verification' },
-                      { name: 'Done', color: '#22c55e', desc: 'Completed and verified' },
-                    ].map((st, idx) => (
-                      <div
-                        key={st.name}
-                        className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/40"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="font-mono text-xs text-slate-400 font-bold">0{idx + 1}</span>
-                          <span
-                            className="w-2.5 h-2.5 rounded-full"
-                            style={{ backgroundColor: st.color }}
-                          />
-                          <div>
-                            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">{st.name}</span>
-                            <p className="text-[11px] text-slate-400 dark:text-slate-500 m-0">{st.desc}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ),
-            },
-            {
               key: 'notifications',
               label: (
                 <span className="flex items-center gap-1.5">
@@ -406,6 +344,82 @@ function SettingsView() {
                       onChange={(checked) => handlePreferenceChange('comment', checked)}
                     />
                   </div>
+                </div>
+              ),
+            },
+            {
+              key: 'security',
+              label: (
+                <span className="flex items-center gap-1.5">
+                  <LockOutlined /> Security
+                </span>
+              ),
+              children: (
+                <div className="flex flex-col gap-4 mt-2 max-w-xl">
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                      <SafetyCertificateOutlined className="text-blue-500" /> Change Password
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Ensure your account uses a strong password of at least 8 characters.
+                    </p>
+                  </div>
+
+                  <Divider className="!my-1" />
+
+                  <Form
+                    form={securityForm}
+                    layout="vertical"
+                    onFinish={handleChangePassword}
+                    requiredMark={false}
+                    className="mt-2"
+                  >
+                    <Form.Item
+                      name="currentPassword"
+                      label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Current Password</span>}
+                      rules={[{ required: true, message: 'Please enter your current password' }]}
+                    >
+                      <Input.Password placeholder="••••••••" />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="newPassword"
+                      label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">New Password</span>}
+                      rules={[
+                        { required: true, message: 'Please enter a new password' },
+                        { min: 8, message: 'Password must be at least 8 characters' },
+                      ]}
+                    >
+                      <Input.Password placeholder="Minimum 8 characters" />
+                    </Form.Item>
+
+                    <Form.Item
+                      name="confirmPassword"
+                      label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Confirm New Password</span>}
+                      rules={[
+                        { required: true, message: 'Please confirm your new password' },
+                        ({ getFieldValue }) => ({
+                          validator(_, value) {
+                            if (!value || getFieldValue('newPassword') === value) {
+                              return Promise.resolve();
+                            }
+                            return Promise.reject(new Error('Passwords do not match'));
+                          },
+                        }),
+                      ]}
+                    >
+                      <Input.Password placeholder="Re-type new password" />
+                    </Form.Item>
+
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={savingSecurity}
+                      className="bg-blue-600"
+                    >
+                      Update Password
+                    </Button>
+                  </Form>
                 </div>
               ),
             },

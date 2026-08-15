@@ -10,6 +10,7 @@ import {
   Table,
   Segmented,
   Tooltip,
+  Dropdown,
 } from 'antd';
 import {
   PlusOutlined,
@@ -21,12 +22,17 @@ import {
   UserOutlined,
   ArrowRightOutlined,
   CrownOutlined,
+  MoreOutlined,
+  SettingOutlined,
+  TeamOutlined,
+  FlagOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
 import { PERMISSIONS } from '../constants/permissions';
 import CreateProjectModal from '../components/projects/CreateProjectModal';
+import ProjectSettingsModal from '../components/projects/ProjectSettingsModal';
 
 /**
  * Renders up to `maxShown` lead avatars with a +N overflow indicator.
@@ -73,12 +79,57 @@ function Projects() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('filter') || 'all';
-  const { user, hasPermission } = useAuth();
+  const { hasPermission } = useAuth();
 
   const { projects, toggleProjectStar, setActiveProjectKey } = useProject();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [settingsModal, setSettingsModal] = useState({
+    open: false,
+    project: null,
+    initialTab: 'general',
+  });
+
+  const openProjectSettings = (project, tab = 'general', e) => {
+    if (e) e.stopPropagation();
+    setSettingsModal({
+      open: true,
+      project,
+      initialTab: tab,
+    });
+  };
+
+  const getProjectMenuItems = (project) => [
+    {
+      key: 'board',
+      icon: <ArrowRightOutlined />,
+      label: 'Open Board',
+      onClick: ({ domEvent }) => {
+        domEvent.stopPropagation();
+        setActiveProjectKey(project.key);
+        navigate('/board');
+      },
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: 'Project Settings',
+      onClick: ({ domEvent }) => openProjectSettings(project, 'general', domEvent),
+    },
+    {
+      key: 'members',
+      icon: <TeamOutlined />,
+      label: 'Manage Members',
+      onClick: ({ domEvent }) => openProjectSettings(project, 'members', domEvent),
+    },
+    {
+      key: 'milestones',
+      icon: <FlagOutlined />,
+      label: 'Milestones',
+      onClick: ({ domEvent }) => openProjectSettings(project, 'milestones', domEvent),
+    },
+  ];
 
   const handleTabChange = (key) => {
     if (key === 'all') {
@@ -196,19 +247,34 @@ function Projects() {
     {
       title: 'Action',
       key: 'action',
+      width: 140,
       render: (_, record) => (
-        <Button
-          type="text"
-          size="small"
-          icon={<ArrowRightOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            setActiveProjectKey(record.key);
-            navigate('/board');
-          }}
-        >
-          Board
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            type="text"
+            size="small"
+            icon={<ArrowRightOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveProjectKey(record.key);
+              navigate('/board');
+            }}
+          >
+            Board
+          </Button>
+          <Dropdown
+            menu={{ items: getProjectMenuItems(record) }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button
+              type="text"
+              size="small"
+              icon={<MoreOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
+              onClick={(e) => e.stopPropagation()}
+            />
+          </Dropdown>
+        </div>
       ),
     },
   ];
@@ -304,23 +370,37 @@ function Projects() {
                     </div>
                   </div>
 
-                  <Tooltip title={project.star ? 'Unstar' : 'Star project'}>
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={
-                        project.star ? (
-                          <StarFilled className="text-amber-500" />
-                        ) : (
-                          <StarOutlined className="text-slate-400 hover:text-amber-500" />
-                        )
-                      }
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleProjectStar(project.key);
-                      }}
-                    />
-                  </Tooltip>
+                  <div className="flex items-center gap-1">
+                    <Tooltip title={project.star ? 'Unstar' : 'Star project'}>
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={
+                          project.star ? (
+                            <StarFilled className="text-amber-500" />
+                          ) : (
+                            <StarOutlined className="text-slate-400 hover:text-amber-500" />
+                          )
+                        }
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleProjectStar(project.key);
+                        }}
+                      />
+                    </Tooltip>
+                    <Dropdown
+                      menu={{ items: getProjectMenuItems(project) }}
+                      trigger={['click']}
+                      placement="bottomRight"
+                    >
+                      <Button
+                        type="text"
+                        size="small"
+                        icon={<MoreOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </Dropdown>
+                  </div>
                 </div>
 
                 {/* Description */}
@@ -394,6 +474,14 @@ function Projects() {
 
       {/* Create Project Modal */}
       <CreateProjectModal open={createModalOpen} onCancel={() => setCreateModalOpen(false)} />
+
+      {/* Project Settings & Management Modal */}
+      <ProjectSettingsModal
+        open={settingsModal.open}
+        onClose={() => setSettingsModal((s) => ({ ...s, open: false }))}
+        project={settingsModal.project}
+        initialTab={settingsModal.initialTab}
+      />
     </div>
   );
 }

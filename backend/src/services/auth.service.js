@@ -87,4 +87,34 @@ async function changePassword({ userId, currentPassword, newPassword }) {
   await user.save();
 }
 
-module.exports = { login, getCurrentUser, changePassword, updateNotificationPreferences, signToken };
+async function updateProfile(userId, { firstName, lastName, department }) {
+  const user = await User.findById(userId);
+  if (!user || !user.isActive) {
+    throw new ApiError(401, 'User not found or inactive');
+  }
+
+  if (firstName !== undefined && String(firstName).trim()) {
+    user.firstName = String(firstName).trim();
+  }
+  if (lastName !== undefined && String(lastName).trim()) {
+    user.lastName = String(lastName).trim();
+  }
+  if (department !== undefined) {
+    user.department = department ? String(department).trim() : null;
+  }
+
+  await user.save();
+  return {
+    ...user.toSafeJSON(),
+    permissions: permissionsForRole(user.role),
+  };
+}
+
+module.exports = {
+  login,
+  getCurrentUser,
+  changePassword,
+  updateNotificationPreferences,
+  updateProfile,
+  signToken,
+};

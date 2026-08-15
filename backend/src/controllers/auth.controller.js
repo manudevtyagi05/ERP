@@ -36,4 +36,10 @@ const updateNotificationPreferences = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, { message: 'Notification preferences updated', data: { user } });
 });
 
-module.exports = { login, getMe, logout, changePassword, updateNotificationPreferences };
+const updateProfile = asyncHandler(async (req, res) => {
+  const { firstName, lastName, department } = req.body;
+  const user = await authService.updateProfile(req.user._id, { firstName, lastName, department });
+  return ApiResponse.success(res, { message: 'Profile updated successfully', data: { user } });
+});
+
+module.exports = { login, getMe, logout, changePassword, updateNotificationPreferences, updateProfile };

@@ -5,13 +5,11 @@ import {
   Tabs,
   Input,
   Select,
-  Button,
   Avatar,
   Tooltip,
 } from 'antd';
 import {
   SearchOutlined,
-  PlusOutlined,
   CalendarOutlined,
   UserOutlined,
 } from '@ant-design/icons';
@@ -28,7 +26,6 @@ function Work() {
     issues,
     moveIssueStatus,
     setSelectedIssueId,
-    setCreateIssueModalOpen,
     setViewScope,
   } = useProject();
 
@@ -187,15 +184,6 @@ function Work() {
             Track tasks and issues assigned to you or created by you across all projects.
           </p>
         </div>
-
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setCreateIssueModalOpen(true)}
-          className="bg-blue-600 hover:!bg-blue-700"
-        >
-          Create Issue
-        </Button>
       </div>
 
       {/* Tabs & Filters */}

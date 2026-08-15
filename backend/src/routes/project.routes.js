@@ -31,7 +31,11 @@ router.use(authenticate);
 router.get('/', requirePermission(PERMISSIONS.PROJECT_READ), listProjects);
 router.get('/:id', requirePermission(PERMISSIONS.PROJECT_READ), getProject);
 router.post('/', requirePermission(PERMISSIONS.PROJECT_CREATE), createProject);
-router.patch('/:id', requirePermission(PERMISSIONS.PROJECT_UPDATE), updateProject);
+router.patch(
+  '/:id',
+  requireCompanyPermOrProjectRole(PERMISSIONS.PROJECT_UPDATE, 'PROJECT_LEAD'),
+  updateProject
+);
 router.patch('/:id/star', requirePermission(PERMISSIONS.PROJECT_READ), toggleStar);
 router.delete('/:id', requirePermission(PERMISSIONS.PROJECT_DELETE), deleteProject);
 

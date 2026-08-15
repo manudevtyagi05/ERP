@@ -13,6 +13,8 @@ import {
   Tooltip,
 } from 'antd';
 import { PlusOutlined, UserOutlined, DeleteOutlined, CrownOutlined } from '@ant-design/icons';
+import { useAuth } from '../../context/AuthContext';
+import { PERMISSIONS } from '../../constants/permissions';
 import {
   listProjectMembers,
   addProjectMember,
@@ -47,6 +49,7 @@ function RoleTag({ role }) {
 }
 
 function ProjectMembersPanel({ project }) {
+  const { user, hasPermission } = useAuth();
   const { message } = App.useApp();
   const [form] = Form.useForm();
 
@@ -126,6 +129,12 @@ function ProjectMembersPanel({ project }) {
     }
   };
 
+  const isLead =
+    members.some(
+      (m) => (m.user?.id === user?.id || m.user?.id === user?._id) && m.projectRoles?.includes('PROJECT_LEAD')
+    ) || project?.projectLeads?.some((l) => l.id === user?.id || l.id === user?._id);
+  const canManage = hasPermission(PERMISSIONS.PROJECT_UPDATE) || Boolean(isLead);
+
   const columns = [
     {
       title: 'Name',
@@ -166,40 +175,51 @@ function ProjectMembersPanel({ project }) {
       title: 'Project Roles',
       key: 'projectRoles',
       width: 260,
-      render: (_, record) => (
-        <Select
-          mode="multiple"
-          size="small"
-          value={record.projectRoles || []}
-          style={{ width: '100%', minWidth: 200 }}
-          onChange={(values) => handleRolesChange(record.id, values)}
-          options={PROJECT_ROLES.map((r) => ({
-            value: r,
-            label: PROJECT_ROLE_META[r]?.label || r,
-          }))}
-          maxTagCount={2}
-          maxTagPlaceholder={(omittedValues) => (
-            <Tooltip title={omittedValues.map((v) => PROJECT_ROLE_META[v.value]?.label || v.value).join(', ')}>
-              <span>+{omittedValues.length}</span>
-            </Tooltip>
-          )}
-        />
-      ),
+      render: (_, record) =>
+        canManage ? (
+          <Select
+            mode="multiple"
+            size="small"
+            value={record.projectRoles || []}
+            style={{ width: '100%', minWidth: 200 }}
+            onChange={(values) => handleRolesChange(record.id, values)}
+            options={PROJECT_ROLES.map((r) => ({
+              value: r,
+              label: PROJECT_ROLE_META[r]?.label || r,
+            }))}
+            maxTagCount={2}
+            maxTagPlaceholder={(omittedValues) => (
+              <Tooltip title={omittedValues.map((v) => PROJECT_ROLE_META[v.value]?.label || v.value).join(', ')}>
+                <span>+{omittedValues.length}</span>
+              </Tooltip>
+            )}
+          />
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {(record.projectRoles || []).map((r) => (
+              <RoleTag key={r} role={r} />
+            ))}
+          </div>
+        ),
     },
-    {
-      title: '',
-      key: 'actions',
-      width: 50,
-      render: (_, record) => (
-        <Popconfirm
-          title="Remove this member from the project?"
-          onConfirm={() => handleRemove(record.id)}
-          okButtonProps={{ danger: true }}
-        >
-          <Button size="small" type="text" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
-      ),
-    },
+    ...(canManage
+      ? [
+          {
+            title: '',
+            key: 'actions',
+            width: 50,
+            render: (_, record) => (
+              <Popconfirm
+                title="Remove this member from the project?"
+                onConfirm={() => handleRemove(record.id)}
+                okButtonProps={{ danger: true }}
+              >
+                <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+              </Popconfirm>
+            ),
+          },
+        ]
+      : []),
   ];
 
   if (!project) {
@@ -207,7 +227,7 @@ function ProjectMembersPanel({ project }) {
       <Alert
         type="info"
         showIcon
-        message="Select a project from the switcher above to manage its members."
+        message="No project specified to manage members."
       />
     );
   }
@@ -229,15 +249,17 @@ function ProjectMembersPanel({ project }) {
             </p>
           )}
         </div>
-        <Button
-          type="primary"
-          size="small"
-          icon={<PlusOutlined />}
-          onClick={openAddModal}
-          className="bg-blue-600"
-        >
-          Add member
-        </Button>
+        {canManage && (
+          <Button
+            type="primary"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={openAddModal}
+            className="bg-blue-600"
+          >
+            Add member
+          </Button>
+        )}
       </div>
 
       {loadError && <Alert type="error" showIcon message={loadError} />}

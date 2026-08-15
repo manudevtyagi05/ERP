@@ -24,7 +24,6 @@ import {
   SettingOutlined,
   UserOutlined,
   LogoutOutlined,
-  PlusOutlined,
   SearchOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -57,7 +56,6 @@ function MainLayout() {
     setActiveProjectKey,
     activeProject,
     notifications,
-    setCreateIssueModalOpen,
     searchQuery,
     setSearchQuery,
     setSelectedIssueId,
@@ -159,7 +157,7 @@ function MainLayout() {
       ),
       label: 'Notifications',
     },
-    hasPermission(PERMISSIONS.PROJECT_UPDATE) && {
+    {
       key: '/settings',
       icon: <SettingOutlined style={{ fontSize: 16 }} />,
       label: 'Settings',
@@ -254,7 +252,7 @@ function MainLayout() {
     else if (currentPath === '/reports') items.push({ title: 'Reports & Velocity' });
     else if (currentPath === '/calendar') items.push({ title: 'Milestones & Calendar' });
     else if (currentPath === '/notifications') items.push({ title: 'Notifications' });
-    else if (currentPath === '/settings') items.push({ title: 'Project Settings' });
+    else if (currentPath === '/settings') items.push({ title: 'Account Settings' });
 
     return items;
   };
@@ -269,7 +267,7 @@ function MainLayout() {
     : [];
 
   return (
-    <Layout className="min-h-screen bg-slate-50 dark:bg-[#090d16]">
+    <Layout hasSider className="h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#090d16]">
       {/* Collapsible Left Sidebar */}
       <Sider
         collapsible
@@ -278,90 +276,94 @@ function MainLayout() {
         trigger={null}
         width={250}
         collapsedWidth={64}
-        className="jira-sidebar border-r border-slate-200/80 dark:border-slate-800 !bg-white dark:!bg-[#0e1526] sticky top-0 h-screen overflow-y-auto select-none"
+        className="jira-sidebar border-r border-slate-200/80 dark:border-slate-800 !bg-white dark:!bg-[#0e1526] h-screen select-none flex-shrink-0"
         style={{ zIndex: 50 }}
       >
-        {/* Brand / Workspace Switcher */}
-        <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center px-4 justify-between">
-          <Dropdown menu={{ items: projectMenuItems }} trigger={['click']} placement="bottomLeft">
-            <div className="flex items-center gap-2.5 cursor-pointer overflow-hidden group">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
-                <ThunderboltFilled />
-              </div>
-              {!collapsed && (
-                <div className="truncate flex flex-col">
-                  <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight truncate group-hover:text-blue-500 transition">
-                    {activeProject ? activeProject.name : 'Enterprise ERP'}
-                  </span>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
-                    {activeProject ? activeProject.key : 'Software Project'}
-                  </span>
+        <div className="h-full flex flex-col justify-between overflow-hidden">
+          <div className="flex flex-col flex-1 min-h-0">
+            {/* Brand / Workspace Switcher */}
+            <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center px-4 justify-between flex-shrink-0">
+              <Dropdown menu={{ items: projectMenuItems }} trigger={['click']} placement="bottomLeft">
+                <div className="flex items-center gap-2.5 cursor-pointer overflow-hidden group">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
+                    <ThunderboltFilled />
+                  </div>
+                  {!collapsed && (
+                    <div className="truncate flex flex-col">
+                      <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight truncate group-hover:text-blue-500 transition">
+                        {activeProject ? activeProject.name : 'Enterprise ERP'}
+                      </span>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">
+                        {activeProject ? activeProject.key : 'Software Project'}
+                      </span>
+                    </div>
+                  )}
                 </div>
+              </Dropdown>
+
+              {!collapsed && (
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<MenuFoldOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
+                  onClick={() => setCollapsed(true)}
+                  className="!w-7 !h-7 flex items-center justify-center !p-0"
+                />
               )}
             </div>
-          </Dropdown>
 
-          {!collapsed && (
-            <Button
-              type="text"
-              size="small"
-              icon={<MenuFoldOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
-              onClick={() => setCollapsed(true)}
-              className="!w-7 !h-7 flex items-center justify-center !p-0"
-            />
+            {/* Collapsed expand button */}
+            {collapsed && (
+              <div className="py-2 flex justify-center border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<MenuUnfoldOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
+                  onClick={() => setCollapsed(false)}
+                />
+              </div>
+            )}
+
+            {/* Navigation Menu */}
+            <div className="py-2 flex-1 overflow-y-auto">
+              <Menu
+                mode="inline"
+                selectedKeys={[location.pathname + location.search, location.pathname]}
+                defaultOpenKeys={['projects-group', 'work-group', 'issues-group']}
+                items={sidebarMenuItems}
+                onClick={({ key }) => {
+                  if (key && !key.endsWith('-group')) {
+                    navigate(key);
+                  }
+                }}
+                inlineIndent={16}
+                className="!border-none !bg-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Sidebar Footer: nearest upcoming milestone for the active project */}
+          {!collapsed && upcomingMilestone && (
+            <div className="p-3 mx-3 my-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
+              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 mb-1 font-medium">
+                <span className="truncate">{upcomingMilestone.name}</span>
+                <span className="text-blue-600 dark:text-blue-400">{upcomingMilestone.progress}%</span>
+              </div>
+              <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                <div className="bg-blue-600 dark:bg-blue-500 h-full rounded-full" style={{ width: `${upcomingMilestone.progress}%` }} />
+              </div>
+              {upcomingMilestone.dueDate && (
+                <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Due {upcomingMilestone.dueDate}</div>
+              )}
+            </div>
           )}
         </div>
-
-        {/* Collapsed expand button */}
-        {collapsed && (
-          <div className="py-2 flex justify-center border-b border-slate-100 dark:border-slate-800">
-            <Button
-              type="text"
-              size="small"
-              icon={<MenuUnfoldOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
-              onClick={() => setCollapsed(false)}
-            />
-          </div>
-        )}
-
-        {/* Navigation Menu */}
-        <div className="py-2">
-          <Menu
-            mode="inline"
-            selectedKeys={[location.pathname + location.search, location.pathname]}
-            defaultOpenKeys={['projects-group', 'work-group', 'issues-group']}
-            items={sidebarMenuItems}
-            onClick={({ key }) => {
-              if (key && !key.endsWith('-group')) {
-                navigate(key);
-              }
-            }}
-            inlineIndent={16}
-            className="!border-none !bg-transparent"
-          />
-        </div>
-
-        {/* Sidebar Footer: nearest upcoming milestone for the active project */}
-        {!collapsed && upcomingMilestone && (
-          <div className="p-3 mx-3 my-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60">
-            <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 mb-1 font-medium">
-              <span className="truncate">{upcomingMilestone.name}</span>
-              <span className="text-blue-600 dark:text-blue-400">{upcomingMilestone.progress}%</span>
-            </div>
-            <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-blue-600 dark:bg-blue-500 h-full rounded-full" style={{ width: `${upcomingMilestone.progress}%` }} />
-            </div>
-            {upcomingMilestone.dueDate && (
-              <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Due {upcomingMilestone.dueDate}</div>
-            )}
-          </div>
-        )}
       </Sider>
 
       {/* Main Layout Container */}
-      <Layout className="!bg-slate-50 dark:!bg-[#090d16]">
+      <Layout className="h-screen flex flex-col min-w-0 overflow-hidden !bg-slate-50 dark:!bg-[#090d16]">
         {/* Header Bar */}
-        <Header className="!bg-white dark:!bg-[#0e1526] border-b border-slate-200/80 dark:border-slate-800 px-6 h-14 flex items-center justify-between sticky top-0 z-40 transition-colors">
+        <Header className="!bg-white dark:!bg-[#0e1526] border-b border-slate-200/80 dark:border-slate-800 px-6 h-14 flex items-center justify-between flex-shrink-0 z-40 transition-colors">
           {/* Left: Breadcrumbs & Collapse icon */}
           <div className="flex items-center gap-4">
             {collapsed && (
@@ -426,16 +428,6 @@ function MainLayout() {
               )}
             </div>
 
-            {/* Quick "+ Create" Issue Button */}
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setCreateIssueModalOpen(true)}
-              className="text-xs !px-3 font-medium bg-blue-600 hover:!bg-blue-700 shadow-sm"
-            >
-              Create
-            </Button>
-
             {/* Theme Toggle Button */}
             <ThemeToggle />
 
@@ -468,8 +460,10 @@ function MainLayout() {
         </Header>
 
         {/* Content Body */}
-        <Content className="p-6 max-w-7xl w-full mx-auto">
-          <Outlet />
+        <Content className="flex-1 overflow-y-auto p-6 min-h-0">
+          <div className="max-w-7xl w-full mx-auto">
+            <Outlet />
+          </div>
         </Content>
       </Layout>
 

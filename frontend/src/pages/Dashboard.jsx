@@ -15,7 +15,6 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   ThunderboltOutlined,
-  PlusOutlined,
   ArrowRightOutlined,
   UserOutlined,
   ProjectOutlined,
@@ -134,7 +133,6 @@ function ManagerDashboard() {
     issues,
     stats,
     setSelectedIssueId,
-    setCreateIssueModalOpen,
     moveIssueStatus,
     activeProject,
     setViewScope,
@@ -164,19 +162,9 @@ function ManagerDashboard() {
           </p>
         </div>
 
-        <Space>
-          <Button icon={<ThunderboltOutlined />} onClick={() => navigate('/board')}>
-            Go to Board
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateIssueModalOpen(true)}
-            className="bg-blue-600 hover:!bg-blue-700"
-          >
-            Create Issue
-          </Button>
-        </Space>
+        <Button icon={<ThunderboltOutlined />} onClick={() => navigate('/board')}>
+          Go to Board
+        </Button>
       </div>
 
       <Row gutter={[16, 16]}>
@@ -386,7 +374,6 @@ function MemberDashboard() {
     projects,
     issues,
     setSelectedIssueId,
-    setCreateIssueModalOpen,
     moveIssueStatus,
     setViewScope,
   } = useProject();
@@ -423,19 +410,6 @@ function MemberDashboard() {
           </p>
         </div>
 
-        <Space>
-          <Button icon={<ThunderboltOutlined />} onClick={() => navigate('/work/assigned')}>
-            My Work
-          </Button>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateIssueModalOpen(true)}
-            className="bg-blue-600 hover:!bg-blue-700"
-          >
-            Create Issue
-          </Button>
-        </Space>
       </div>
 
       <Row gutter={[16, 16]}>

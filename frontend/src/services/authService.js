@@ -24,3 +24,8 @@ export async function updateNotificationPreferencesRequest(preferences) {
   const { data } = await apiClient.patch('/auth/me/notification-preferences', preferences);
   return data.data.user;
 }
+
+export async function updateProfileRequest(profileData) {
+  const { data } = await apiClient.patch('/auth/me/profile', profileData);
+  return data.data.user;
+}

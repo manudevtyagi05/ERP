@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
-import { Calendar, Card, Button, Space } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Calendar, Card } from 'antd';
 import { useProject } from '../context/ProjectContext';
 import { ISSUE_STATUSES } from '../constants/jira';
 
 function CalendarView() {
-  const { issues, setSelectedIssueId, setCreateIssueModalOpen, setViewScope } = useProject();
+  const { issues, setSelectedIssueId, setViewScope } = useProject();
 
   useEffect(() => {
     setViewScope('all');
@@ -57,17 +56,6 @@ function CalendarView() {
             Track issue delivery deadlines, sprint milestones, and release windows.
           </p>
         </div>
-
-        <Space>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setCreateIssueModalOpen(true)}
-            className="bg-blue-600 hover:!bg-blue-700"
-          >
-            Create Issue
-          </Button>
-        </Space>
       </div>
 
       {/* Calendar Card */}

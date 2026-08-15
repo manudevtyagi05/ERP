@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button, Table, Tag, Progress, Popconfirm, Modal, Form, Input, Select, DatePicker, Alert, App } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import { useAuth } from '../../context/AuthContext';
+import { PERMISSIONS } from '../../constants/permissions';
 import {
   listMilestones,
   createMilestone,
@@ -16,6 +18,7 @@ const STATUS_COLORS = { PLANNED: 'default', IN_PROGRESS: 'blue', COMPLETED: 'gre
 const emptyModal = { open: false, mode: 'create', target: null, submitting: false };
 
 function ProjectMilestonesPanel({ project }) {
+  const { user, hasPermission } = useAuth();
   const { message } = App.useApp();
   const [form] = Form.useForm();
 
@@ -92,6 +95,9 @@ function ProjectMilestonesPanel({ project }) {
     }
   };
 
+  const isLead = project?.projectLeads?.some((l) => l.id === user?.id || l.id === user?._id);
+  const canManage = hasPermission(PERMISSIONS.PROJECT_UPDATE) || Boolean(isLead);
+
   const columns = [
     { title: 'Name', dataIndex: 'name' },
     {
@@ -123,29 +129,33 @@ function ProjectMilestonesPanel({ project }) {
         </div>
       ),
     },
-    {
-      title: '',
-      key: 'actions',
-      width: 80,
-      render: (_, record) => (
-        <div className="flex gap-1">
-          <Button size="small" type="text" icon={<EditOutlined />} onClick={() => openEdit(record)} />
-          <Popconfirm
-            title="Delete this milestone?"
-            description="Issues linked to it will be unlinked, not deleted."
-            onConfirm={() => handleDelete(record.id)}
-            okButtonProps={{ danger: true }}
-          >
-            <Button size="small" type="text" danger icon={<DeleteOutlined />} />
-          </Popconfirm>
-        </div>
-      ),
-    },
+    ...(canManage
+      ? [
+          {
+            title: '',
+            key: 'actions',
+            width: 80,
+            render: (_, record) => (
+              <div className="flex gap-1">
+                <Button size="small" type="text" icon={<EditOutlined />} onClick={() => openEdit(record)} />
+                <Popconfirm
+                  title="Delete this milestone?"
+                  description="Issues linked to it will be unlinked, not deleted."
+                  onConfirm={() => handleDelete(record.id)}
+                  okButtonProps={{ danger: true }}
+                >
+                  <Button size="small" type="text" danger icon={<DeleteOutlined />} />
+                </Popconfirm>
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
 
   if (!project) {
     return (
-      <Alert type="info" showIcon message="Select a project from the switcher above to manage its milestones." />
+      <Alert type="info" showIcon message="No project specified to manage milestones." />
     );
   }
 
@@ -153,9 +163,11 @@ function ProjectMilestonesPanel({ project }) {
     <div className="flex flex-col gap-3 mt-2 max-w-3xl">
       <div className="flex items-center justify-between">
         <p className="text-xs text-slate-500 dark:text-slate-400 !mb-0">Key delivery checkpoints for {project.name}.</p>
-        <Button type="primary" size="small" icon={<PlusOutlined />} onClick={openCreate} className="bg-blue-600">
-          Add milestone
-        </Button>
+        {canManage && (
+          <Button type="primary" size="small" icon={<PlusOutlined />} onClick={openCreate} className="bg-blue-600">
+            Add milestone
+          </Button>
+        )}
       </div>
 
       {loadError && <Alert type="error" showIcon message={loadError} />}
