@@ -115,24 +115,6 @@ function Login() {
               </Button>
             </Form.Item>
           </Form>
-
-          <Divider className="!my-3 dark:border-slate-800">
-            <span className="text-[11px] text-slate-400 dark:text-slate-500 font-normal">Demo Access</span>
-          </Divider>
-
-          <div className="flex flex-col gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-            <button
-              type="button"
-              onClick={() => fillDemoCredentials('admin@company.com', 'admin123')}
-              className="w-full text-left p-2 rounded bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/80 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-700/60 text-xs transition flex items-center justify-between cursor-pointer"
-            >
-              <div>
-                <span className="font-semibold text-slate-700 dark:text-slate-200">Admin Account</span>
-                <div className="text-[11px] text-slate-400 dark:text-slate-400">admin@company.com</div>
-              </div>
-              <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">Use</span>
-            </button>
-          </div>
         </Card>
 
         <div className="text-center text-[11px] text-slate-400 dark:text-slate-500">
