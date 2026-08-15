@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-let isConnected = false;
+let cachedConnection = null;
 
 async function connectDatabase() {
   const uri = process.env.MONGODB_URI;
@@ -10,31 +10,45 @@ async function connectDatabase() {
     return false;
   }
 
-  mongoose.connection.on('connected', () => {
-    isConnected = true;
-    const { host, name } = mongoose.connection;
-    console.log(`[database] Connected to MongoDB (host=${host}, db=${name})`);
-  });
+  // 1 = connected, 2 = connecting
+  if (mongoose.connection.readyState === 1) {
+    return true;
+  }
 
-  mongoose.connection.on('error', (err) => {
-    console.error('[database] Connection error:', err.message);
-  });
-
-  mongoose.connection.on('disconnected', () => {
-    isConnected = false;
-    console.warn('[database] Disconnected from MongoDB');
-  });
+  if (cachedConnection && mongoose.connection.readyState === 2) {
+    try {
+      await cachedConnection;
+      return true;
+    } catch (err) {
+      cachedConnection = null;
+    }
+  }
 
   try {
-    await mongoose.connect(uri, {
-      serverSelectionTimeoutMS: 5000,
+    cachedConnection = mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 8000,
     });
+    await cachedConnection;
     return true;
   } catch (err) {
+    cachedConnection = null;
     console.error('[database] Failed to connect to MongoDB:', err.message);
-    return false;
+    throw err;
   }
 }
+
+mongoose.connection.on('connected', () => {
+  const { host, name } = mongoose.connection;
+  console.log(`[database] Connected to MongoDB (host=${host}, db=${name})`);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('[database] Connection error:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('[database] Disconnected from MongoDB');
+});
 
 async function disconnectDatabase() {
   if (mongoose.connection.readyState !== 0) {
@@ -52,4 +66,10 @@ function getConnectionStatus() {
   return stateMap[mongoose.connection.readyState] || 'unknown';
 }
 
-module.exports = { connectDatabase, disconnectDatabase, getConnectionStatus, isConnected: () => isConnected };
+module.exports = {
+  connectDatabase,
+  disconnectDatabase,
+  getConnectionStatus,
+  isConnected: () => mongoose.connection.readyState === 1,
+};
+
