@@ -7,7 +7,6 @@ import {
   Tag,
   Avatar,
   Button,
-  Space,
   Select,
   Tooltip,
 } from 'antd';
@@ -333,34 +332,36 @@ function ManagerDashboard() {
         <Col xs={24} lg={9} className="flex flex-col gap-6">
           <UpcomingMilestonesCard milestones={milestones} />
 
-          <Card
-            variant="borderless"
-            className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
-            title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Recent Updates</span>}
-          >
-            <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
-              {recentIssues.map((issue) => (
-                <div
-                  key={issue.id}
-                  className="py-2.5 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/60 -mx-2 px-2 rounded transition"
-                  onClick={() => setSelectedIssueId(issue.id)}
-                >
-                  <Avatar size="small" icon={<UserOutlined />} className="mt-0.5 bg-slate-200 dark:bg-slate-700" />
-                  <div className="flex-1 min-w-0 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">{issue.assignee?.name}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                        {new Date(issue.updatedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                    <div className="text-slate-600 dark:text-slate-400 truncate mt-0.5">
-                      Updated <span className="font-mono font-medium text-blue-600 dark:text-blue-400">{issue.key}</span>: {issue.title}
+          <div className="pt-3">
+            <Card
+              variant="borderless"
+              className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
+              title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Recent Updates</span>}
+            >
+              <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
+                {recentIssues.map((issue) => (
+                  <div
+                    key={issue.id}
+                    className="py-2.5 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/60 -mx-2 px-2 rounded transition"
+                    onClick={() => setSelectedIssueId(issue.id)}
+                  >
+                    <Avatar size="small" icon={<UserOutlined />} className="mt-0.5 bg-slate-200 dark:bg-slate-700" />
+                    <div className="flex-1 min-w-0 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-slate-700 dark:text-slate-200 truncate">{issue.assignee?.name}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                          {new Date(issue.updatedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-slate-600 dark:text-slate-400 truncate mt-0.5">
+                        Updated <span className="font-mono font-medium text-blue-600 dark:text-blue-400">{issue.key}</span>: {issue.title}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </Card>
+                ))}
+              </div>
+            </Card>
+          </div>
         </Col>
       </Row>
     </div>
@@ -486,37 +487,39 @@ function MemberDashboard() {
         <Col xs={24} lg={9} className="flex flex-col gap-6">
           <UpcomingMilestonesCard milestones={milestones} />
 
-          <Card
-            variant="borderless"
-            className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
-            title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Your Recent Activity</span>}
-          >
-            <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
-              {recentActivity.map((issue) => (
-                <div
-                  key={issue.id}
-                  className="py-2.5 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/60 -mx-2 px-2 rounded transition"
-                  onClick={() => setSelectedIssueId(issue.id)}
-                >
-                  <div className="w-7 h-7 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <FlagOutlined className="text-slate-400 dark:text-slate-500 text-xs" />
-                  </div>
-                  <div className="flex-1 min-w-0 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono font-medium text-blue-600 dark:text-blue-400">{issue.key}</span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">
-                        {new Date(issue.updatedAt).toLocaleDateString()}
-                      </span>
+          <div className="pt-3">
+            <Card
+              variant="borderless"
+              className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
+              title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Your Recent Activity</span>}
+            >
+              <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
+                {recentActivity.map((issue) => (
+                  <div
+                    key={issue.id}
+                    className="py-2.5 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50/60 dark:hover:bg-slate-800/60 -mx-2 px-2 rounded transition"
+                    onClick={() => setSelectedIssueId(issue.id)}
+                  >
+                    <div className="w-7 h-7 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <FlagOutlined className="text-slate-400 dark:text-slate-500 text-xs" />
                     </div>
-                    <div className="text-slate-600 dark:text-slate-400 truncate mt-0.5">{issue.title}</div>
+                    <div className="flex-1 min-w-0 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-medium text-blue-600 dark:text-blue-400">{issue.key}</span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500">
+                          {new Date(issue.updatedAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-slate-600 dark:text-slate-400 truncate mt-0.5">{issue.title}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-              {recentActivity.length === 0 && (
-                <div className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">No activity yet.</div>
-              )}
-            </div>
-          </Card>
+                ))}
+                {recentActivity.length === 0 && (
+                  <div className="text-xs text-slate-400 dark:text-slate-500 text-center py-4">No activity yet.</div>
+                )}
+              </div>
+            </Card>
+          </div>
         </Col>
       </Row>
     </div>
