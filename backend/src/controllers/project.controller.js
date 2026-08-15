@@ -4,7 +4,8 @@ const projectService = require('../services/project.service');
 
 const listProjects = asyncHandler(async (req, res) => {
   const { search, filter } = req.query;
-  const data = await projectService.listProjects(req.company._id, { search, filter });
+  // Pass authenticated user ID so the service can resolve "My Projects" by membership
+  const data = await projectService.listProjects(req.company._id, req.user._id, { search, filter });
   return ApiResponse.success(res, { message: 'Projects retrieved', data });
 });
 
@@ -19,7 +20,12 @@ const createProject = asyncHandler(async (req, res) => {
 });
 
 const updateProject = asyncHandler(async (req, res) => {
-  const data = await projectService.updateProject(req.company._id, req.params.id, req.body, req.user._id);
+  const data = await projectService.updateProject(
+    req.company._id,
+    req.params.id,
+    req.body,
+    req.user._id
+  );
   return ApiResponse.success(res, { message: 'Project updated', data });
 });
 
@@ -29,7 +35,11 @@ const toggleStar = asyncHandler(async (req, res) => {
 });
 
 const deleteProject = asyncHandler(async (req, res) => {
-  const data = await projectService.deleteProject(req.company._id, req.params.id, req.user._id);
+  const data = await projectService.deleteProject(
+    req.company._id,
+    req.params.id,
+    req.user._id
+  );
   return ApiResponse.success(res, { message: 'Project deleted', data });
 });
 

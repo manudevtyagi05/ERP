@@ -8,6 +8,9 @@ import {
   Select,
   Switch,
   Alert,
+  Avatar,
+  Tag,
+  Tooltip,
   App,
 } from 'antd';
 import {
@@ -22,6 +25,8 @@ import {
   MoonOutlined,
   DesktopOutlined,
   CheckCircleFilled,
+  CrownOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
@@ -47,8 +52,9 @@ function SettingsView() {
       await updateProject(activeProject.id, {
         name: values.projectName,
         category: values.category,
-        lead: values.lead,
         description: values.description,
+        // Note: project lead is no longer a free-text field.
+        // Manage leads through the Members tab → PROJECT_LEAD role.
       });
       message.success('Settings updated successfully');
     } catch (err) {
@@ -61,7 +67,6 @@ function SettingsView() {
       projectName: activeProject?.name,
       projectKey: activeProject?.key,
       category: activeProject?.category,
-      lead: activeProject?.lead,
       description: activeProject?.description,
     });
   }, [activeProject, form]);
@@ -110,7 +115,7 @@ function SettingsView() {
         </p>
       </div>
 
-      <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
+      <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
         <Tabs
           defaultActiveKey="general"
           items={[
@@ -140,7 +145,6 @@ function SettingsView() {
                       projectName: activeProject?.name,
                       projectKey: activeProject?.key,
                       category: activeProject?.category,
-                      lead: activeProject?.lead,
                       description: activeProject?.description,
                     }}
                     onFinish={handleSave}
@@ -165,28 +169,54 @@ function SettingsView() {
                       </Form.Item>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <Form.Item
-                        name="category"
-                        label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Category</span>}
-                      >
-                        <Select
-                          options={[
-                            { value: 'Software Architecture', label: 'Software Architecture' },
-                            { value: 'Design Engineering', label: 'Design Engineering' },
-                            { value: 'Fintech Service', label: 'Fintech Service' },
-                            { value: 'DevOps & Reliability', label: 'DevOps & Reliability' },
-                          ]}
-                        />
-                      </Form.Item>
+                    <Form.Item
+                      name="category"
+                      label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Category</span>}
+                    >
+                      <Select
+                        options={[
+                          { value: 'Software Architecture', label: 'Software Architecture' },
+                          { value: 'Design Engineering', label: 'Design Engineering' },
+                          { value: 'Fintech Service', label: 'Fintech Service' },
+                          { value: 'DevOps & Reliability', label: 'DevOps & Reliability' },
+                        ]}
+                      />
+                    </Form.Item>
 
-                      <Form.Item
-                        name="lead"
-                        label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Lead</span>}
-                      >
-                        <Input />
-                      </Form.Item>
-                    </div>
+                    {/* Project leads — display-only; managed via the Members tab */}
+                    {activeProject && (
+                      <div className="mb-4">
+                        <label className="text-xs font-medium text-slate-600 dark:text-slate-300 block mb-1.5">
+                          Project Lead(s)
+                        </label>
+                        <div className="flex flex-wrap gap-2 p-2.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 min-h-[36px]">
+                          {activeProject.projectLeads && activeProject.projectLeads.length > 0 ? (
+                            activeProject.projectLeads.map((lead) => (
+                              <Tooltip key={lead.id} title={lead.email}>
+                                <Tag
+                                  icon={<CrownOutlined className="text-amber-500" />}
+                                  className="flex items-center gap-1 text-xs"
+                                >
+                                  <Avatar
+                                    size={14}
+                                    icon={<UserOutlined />}
+                                    className="bg-blue-500 mr-1"
+                                  />
+                                  {lead.name}
+                                </Tag>
+                              </Tooltip>
+                            ))
+                          ) : (
+                            <span className="text-xs text-slate-400">
+                              No project leads assigned. Add a member with the PROJECT_LEAD role in the Members tab.
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          Manage project leads in the <strong>Members</strong> tab by assigning the PROJECT_LEAD role.
+                        </p>
+                      </div>
+                    )}
 
                     <Form.Item
                       name="description"

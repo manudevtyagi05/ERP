@@ -55,7 +55,7 @@ function CreateIssueModal() {
       okText="Create"
       confirmLoading={submitting}
       width={580}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}

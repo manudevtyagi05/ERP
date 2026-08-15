@@ -23,7 +23,7 @@ function ChangeRoleModal({ open, staff, submitting, error, onCancel, onSubmit })
       onOk={handleOk}
       okText="Update role"
       confirmLoading={submitting}
-      destroyOnClose
+      destroyOnHidden
     >
       {error && <Alert type="error" showIcon message={error} className="mb-4" />}
       <Typography.Text type="secondary" className="block mb-4">

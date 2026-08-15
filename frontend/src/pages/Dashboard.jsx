@@ -97,7 +97,7 @@ function IssueRow({ issue, onSelect, onStatusChange }) {
 function UpcomingMilestonesCard({ milestones }) {
   return (
     <Card
-      bordered={false}
+      variant="borderless"
       className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
       title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Upcoming Milestones</span>}
     >
@@ -181,7 +181,7 @@ function ManagerDashboard() {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e] hover:border-slate-300 dark:hover:border-slate-700 transition">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e] hover:border-slate-300 dark:hover:border-slate-700 transition">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -204,7 +204,7 @@ function ManagerDashboard() {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e] hover:border-slate-300 dark:hover:border-slate-700 transition">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e] hover:border-slate-300 dark:hover:border-slate-700 transition">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">In Progress</div>
@@ -222,7 +222,7 @@ function ManagerDashboard() {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e] hover:border-slate-300 dark:hover:border-slate-700 transition">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e] hover:border-slate-300 dark:hover:border-slate-700 transition">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -244,7 +244,7 @@ function ManagerDashboard() {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e] hover:border-slate-300 dark:hover:border-slate-700 transition">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e] hover:border-slate-300 dark:hover:border-slate-700 transition">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
@@ -267,7 +267,7 @@ function ManagerDashboard() {
       <Row gutter={[20, 20]}>
         <Col xs={24} lg={15} className="flex flex-col gap-6">
           <Card
-            bordered={false}
+            variant="borderless"
             className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
             title={
               <div className="flex items-center justify-between">
@@ -296,7 +296,7 @@ function ManagerDashboard() {
           </Card>
 
           <Card
-            bordered={false}
+            variant="borderless"
             className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
             title={
               <div className="flex items-center justify-between">
@@ -346,7 +346,7 @@ function ManagerDashboard() {
           <UpcomingMilestonesCard milestones={milestones} />
 
           <Card
-            bordered={false}
+            variant="borderless"
             className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
             title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Recent Updates</span>}
           >
@@ -440,37 +440,37 @@ function MemberDashboard() {
 
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">To Do</div>
             <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myOpen.length}</div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">In Progress</div>
             <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myInProgress.length}</div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed</div>
             <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myCompleted.length}</div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} className="shadow-sm border border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-900/20">
+          <Card variant="borderless" className="shadow-sm border border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-900/20">
             <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Due Today</div>
             <div className="text-2xl font-bold text-amber-800 dark:text-amber-300 mt-1">{myDueToday.length}</div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} className="shadow-sm border border-red-200 dark:border-red-800/60 bg-red-50/40 dark:bg-red-900/20">
+          <Card variant="borderless" className="shadow-sm border border-red-200 dark:border-red-800/60 bg-red-50/40 dark:bg-red-900/20">
             <div className="text-xs font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider">Overdue</div>
             <div className="text-2xl font-bold text-red-800 dark:text-red-300 mt-1">{myOverdue.length}</div>
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={4}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">My Projects</div>
             <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myProjectKeys.size}</div>
           </Card>
@@ -480,7 +480,7 @@ function MemberDashboard() {
       <Row gutter={[20, 20]}>
         <Col xs={24} lg={15} className="flex flex-col gap-6">
           <Card
-            bordered={false}
+            variant="borderless"
             className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
             title={
               <div className="flex items-center justify-between">
@@ -513,7 +513,7 @@ function MemberDashboard() {
           <UpcomingMilestonesCard milestones={milestones} />
 
           <Card
-            bordered={false}
+            variant="borderless"
             className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]"
             title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Your Recent Activity</span>}
           >

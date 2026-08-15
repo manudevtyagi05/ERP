@@ -8,29 +8,35 @@ const listMembers = asyncHandler(async (req, res) => {
 });
 
 const addMember = asyncHandler(async (req, res) => {
-  const { userId, projectRole } = req.body;
+  // Accept both new projectRoles[] and legacy projectRole string
+  const { userId, projectRoles, projectRole } = req.body;
   const data = await projectMemberService.addMember(
     req.company._id,
     req.params.id,
-    { userId, projectRole },
+    { userId, projectRoles, projectRole },
     req.user._id
   );
   return ApiResponse.success(res, { statusCode: 201, message: 'Member added to project', data });
 });
 
 const updateMemberRole = asyncHandler(async (req, res) => {
-  const { projectRole } = req.body;
-  const data = await projectMemberService.updateMemberRole(
+  // Accept both new projectRoles[] and legacy projectRole string
+  const { projectRoles, projectRole } = req.body;
+  const data = await projectMemberService.updateMemberRoles(
     req.company._id,
     req.params.id,
     req.params.memberId,
-    projectRole
+    projectRoles || projectRole
   );
-  return ApiResponse.success(res, { message: 'Member role updated', data });
+  return ApiResponse.success(res, { message: 'Member roles updated', data });
 });
 
 const removeMember = asyncHandler(async (req, res) => {
-  await projectMemberService.removeMember(req.company._id, req.params.id, req.params.memberId);
+  await projectMemberService.removeMember(
+    req.company._id,
+    req.params.id,
+    req.params.memberId
+  );
   return ApiResponse.success(res, { message: 'Member removed from project' });
 });
 

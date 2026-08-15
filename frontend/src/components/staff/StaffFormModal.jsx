@@ -34,7 +34,7 @@ function StaffFormModal({ open, mode, initialValues, submitting, error, onCancel
       onOk={handleOk}
       okText={isEdit ? 'Save changes' : 'Create staff member'}
       confirmLoading={submitting}
-      destroyOnClose
+      destroyOnHidden
     >
       {error && <Alert type="error" showIcon message={error} className="mb-4" />}
       <Form form={form} layout="vertical" requiredMark={false}>

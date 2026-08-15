@@ -169,7 +169,7 @@ function ProjectMilestonesPanel({ project }) {
         onOk={handleSubmit}
         okText={modal.mode === 'create' ? 'Create' : 'Save changes'}
         confirmLoading={modal.submitting}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form form={form} layout="vertical" requiredMark={false}>
           <Form.Item name="name" label="Name" rules={[{ required: true, message: 'Milestone name is required' }]}>

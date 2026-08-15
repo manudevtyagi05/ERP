@@ -55,7 +55,7 @@ function Login() {
           </p>
         </div>
 
-        <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-2">
+        <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-2">
           {error && (
             <Alert
               type="error"

@@ -64,7 +64,7 @@ function NotificationsView() {
       </div>
 
       {/* List */}
-      <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-0">
+      <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-0">
         <div className="flex flex-col divide-y divide-slate-100 dark:divide-slate-800">
           {filteredNotifications.map((n) => (
             <div

@@ -5,14 +5,33 @@ export async function listProjectMembers(projectId) {
   return data.data;
 }
 
+/**
+ * Add a member to a project.
+ * Payload: { userId: string, projectRoles: string[] }
+ * Backward compat: { userId, projectRole: string } also accepted by the backend.
+ */
 export async function addProjectMember(projectId, payload) {
   const { data } = await apiClient.post(`/projects/${projectId}/members`, payload);
   return data.data;
 }
 
-export async function updateProjectMemberRole(projectId, memberId, projectRole) {
-  const { data } = await apiClient.patch(`/projects/${projectId}/members/${memberId}`, { projectRole });
+/**
+ * Update the project roles for an existing member.
+ * Payload: { projectRoles: string[] }
+ */
+export async function updateProjectMemberRoles(projectId, memberId, projectRoles) {
+  const { data } = await apiClient.patch(`/projects/${projectId}/members/${memberId}`, {
+    projectRoles,
+  });
   return data.data;
+}
+
+/**
+ * Legacy alias — still works, sends projectRoles as a one-element array.
+ * @deprecated Use updateProjectMemberRoles instead.
+ */
+export async function updateProjectMemberRole(projectId, memberId, projectRole) {
+  return updateProjectMemberRoles(projectId, memberId, [projectRole]);
 }
 
 export async function removeProjectMember(projectId, memberId) {

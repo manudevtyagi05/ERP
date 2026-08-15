@@ -20,24 +20,66 @@ import {
   BarsOutlined,
   UserOutlined,
   ArrowRightOutlined,
+  CrownOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useProject } from '../context/ProjectContext';
 import { useAuth } from '../context/AuthContext';
+import { PERMISSIONS } from '../constants/permissions';
 import CreateProjectModal from '../components/projects/CreateProjectModal';
+
+/**
+ * Renders up to `maxShown` lead avatars with a +N overflow indicator.
+ */
+function ProjectLeadsDisplay({ leads = [], maxShown = 2 }) {
+  if (!leads.length) return <span className="text-xs text-slate-400">—</span>;
+
+  const visible = leads.slice(0, maxShown);
+  const overflow = leads.length - maxShown;
+
+  return (
+    <Tooltip
+      title={
+        <div className="flex flex-col gap-1 py-0.5">
+          {leads.map((l) => (
+            <span key={l.id} className="flex items-center gap-1.5">
+              <CrownOutlined className="text-amber-400 text-[10px]" />
+              <span className="text-xs">{l.name}</span>
+            </span>
+          ))}
+        </div>
+      }
+    >
+      <div className="flex items-center gap-1">
+        <Avatar.Group maxCount={maxShown} size="small">
+          {visible.map((l) => (
+            <Tooltip key={l.id} title={l.name}>
+              <Avatar size="small" icon={<UserOutlined />} className="bg-blue-500" />
+            </Tooltip>
+          ))}
+        </Avatar.Group>
+        <span className="text-[11px] text-slate-600 dark:text-slate-300 truncate max-w-[100px]">
+          {visible[0]?.name}
+          {overflow > 0 && (
+            <span className="text-slate-400"> +{overflow}</span>
+          )}
+        </span>
+      </div>
+    </Tooltip>
+  );
+}
 
 function Projects() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('filter') || 'all';
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
 
   const { projects, toggleProjectStar, setActiveProjectKey } = useProject();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [createModalOpen, setCreateModalOpen] = useState(false);
 
-  // Tab filtering
   const handleTabChange = (key) => {
     if (key === 'all') {
       setSearchParams({});
@@ -46,17 +88,31 @@ function Projects() {
     }
   };
 
-  // Filtered projects
+  /**
+   * Client-side filter applied on top of whatever the ProjectContext already loaded.
+   *
+   * "My Projects" now uses project.isMember (set by the backend based on ProjectMember
+   * records) rather than project.leadEmail — so every project member (not just the
+   * primary display lead) sees their project in this tab.
+   */
   const filteredProjects = projects.filter((project) => {
-    if (search && !project.name.toLowerCase().includes(search.toLowerCase()) && !project.key.toLowerCase().includes(search.toLowerCase())) {
+    if (
+      search &&
+      !project.name.toLowerCase().includes(search.toLowerCase()) &&
+      !project.key.toLowerCase().includes(search.toLowerCase())
+    ) {
       return false;
     }
-    if (currentTab === 'my' && project.leadEmail !== user?.email) {
+
+    // My Projects — membership-based (any project role, not just PROJECT_LEAD)
+    if (currentTab === 'my' && !project.isMember) {
       return false;
     }
+
     if (currentTab === 'starred' && !project.star) {
       return false;
     }
+
     return true;
   });
 
@@ -111,14 +167,9 @@ function Projects() {
       ),
     },
     {
-      title: 'Project Lead',
-      key: 'lead',
-      render: (_, record) => (
-        <div className="flex items-center gap-2">
-          <Avatar src={record.leadAvatar} size="small" icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
-          <span className="text-xs text-slate-700 dark:text-slate-300">{record.lead}</span>
-        </div>
-      ),
+      title: 'Project Lead(s)',
+      key: 'leads',
+      render: (_, record) => <ProjectLeadsDisplay leads={record.projectLeads || []} />,
     },
     {
       title: 'Progress',
@@ -173,14 +224,16 @@ function Projects() {
           </p>
         </div>
 
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setCreateModalOpen(true)}
-          className="bg-blue-600 hover:!bg-blue-700"
-        >
-          Create Project
-        </Button>
+        {hasPermission(PERMISSIONS.PROJECT_CREATE) && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => setCreateModalOpen(true)}
+            className="bg-blue-600 hover:!bg-blue-700"
+          >
+            Create Project
+          </Button>
+        )}
       </div>
 
       {/* Tabs & Filter Bar */}
@@ -192,7 +245,6 @@ function Projects() {
           items={[
             { key: 'all', label: 'All Projects' },
             { key: 'my', label: 'My Projects' },
-            { key: 'recent', label: 'Recent Projects' },
             { key: 'starred', label: 'Starred' },
           ]}
         />
@@ -227,7 +279,7 @@ function Projects() {
           {filteredProjects.map((project) => (
             <Card
               key={project.id}
-              bordered={false}
+              variant="borderless"
               className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between"
               onClick={() => {
                 setActiveProjectKey(project.key);
@@ -286,9 +338,24 @@ function Projects() {
                 <Progress percent={project.progress} size="small" showInfo={false} />
 
                 <div className="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
+                  {/* Multi-lead display */}
                   <div className="flex items-center gap-1.5">
-                    <Avatar src={project.leadAvatar} size={20} icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
-                    <span className="truncate max-w-[100px] text-[11px] text-slate-700 dark:text-slate-300">{project.lead}</span>
+                    {project.projectLeads && project.projectLeads.length > 0 ? (
+                      <ProjectLeadsDisplay leads={project.projectLeads} />
+                    ) : (
+                      // Fallback to legacy lead field if no ProjectMember leads yet
+                      <>
+                        <Avatar
+                          src={project.leadAvatar}
+                          size={20}
+                          icon={<UserOutlined />}
+                          className="bg-slate-200 dark:bg-slate-700"
+                        />
+                        <span className="truncate max-w-[100px] text-[11px] text-slate-700 dark:text-slate-300">
+                          {project.lead}
+                        </span>
+                      </>
+                    )}
                   </div>
                   <span className="text-[11px] text-slate-400 dark:text-slate-500">
                     {project.completedIssues}/{project.totalIssues} issues
@@ -300,12 +367,14 @@ function Projects() {
 
           {filteredProjects.length === 0 && (
             <div className="col-span-full bg-white dark:bg-[#131b2e] p-8 rounded-lg border border-slate-200 dark:border-slate-800 text-center text-slate-400 dark:text-slate-500 text-xs">
-              No projects matching your search criteria.
+              {currentTab === 'my'
+                ? "You're not a member of any projects yet. Ask your project lead to add you."
+                : 'No projects matching your search criteria.'}
             </div>
           )}
         </div>
       ) : (
-        <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
+        <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
           <Table
             rowKey="id"
             columns={columns}

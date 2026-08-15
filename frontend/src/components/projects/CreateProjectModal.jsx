@@ -13,18 +13,30 @@ function CreateProjectModal({ open, onCancel }) {
   const handleFinish = async (values) => {
     setSubmitting(true);
     try {
-      const lead = teamMembers.find((m) => m.email === values.lead);
+      // Resolve the first selected lead for the legacy lead/leadEmail display fields
+      const firstLeadId = values.projectLeadIds?.[0];
+      const firstLead = firstLeadId
+        ? teamMembers.find((m) => m.id === firstLeadId)
+        : null;
+
       const payload = {
-        ...values,
-        lead: lead?.name || `${user?.firstName} ${user?.lastName}`,
-        leadEmail: values.lead,
+        name: values.name,
+        key: values.key,
+        category: values.category,
+        description: values.description,
+        // Legacy display fields (for project cards, backward compat)
+        lead: firstLead?.name || `${user?.firstName} ${user?.lastName}`,
+        leadEmail: firstLead?.email || user?.email,
+        // New: authoritative project lead IDs — ProjectMember records will be created
+        projectLeadIds: values.projectLeadIds || [user?.id],
       };
+
       const newProject = await addProject(payload);
-      message.success(`Project ${newProject.name} created!`);
+      message.success(`Project "${newProject.name}" created!`);
       form.resetFields();
       onCancel();
     } catch {
-      message.error('Failed to create project. Please check if key is unique.');
+      message.error('Failed to create project. Please check that the key prefix is unique.');
     } finally {
       setSubmitting(false);
     }
@@ -32,7 +44,11 @@ function CreateProjectModal({ open, onCancel }) {
 
   return (
     <Modal
-      title={<div className="text-base font-semibold text-slate-800 dark:text-slate-100">Create Project</div>}
+      title={
+        <div className="text-base font-semibold text-slate-800 dark:text-slate-100">
+          Create Project
+        </div>
+      }
       open={open}
       onCancel={() => {
         form.resetFields();
@@ -41,8 +57,8 @@ function CreateProjectModal({ open, onCancel }) {
       onOk={() => form.submit()}
       okText="Create Project"
       confirmLoading={submitting}
-      width={520}
-      destroyOnClose
+      width={540}
+      destroyOnHidden
     >
       <Form
         form={form}
@@ -50,14 +66,19 @@ function CreateProjectModal({ open, onCancel }) {
         onFinish={handleFinish}
         initialValues={{
           category: 'Software Architecture',
-          lead: user?.email,
+          // Default: current user is the first project lead
+          projectLeadIds: user?.id ? [user.id] : [],
         }}
         className="mt-4"
         requiredMark={false}
       >
         <Form.Item
           name="name"
-          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Name</span>}
+          label={
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+              Project Name
+            </span>
+          }
           rules={[{ required: true, message: 'Please enter project name' }]}
         >
           <Input
@@ -80,7 +101,11 @@ function CreateProjectModal({ open, onCancel }) {
         <div className="grid grid-cols-2 gap-3">
           <Form.Item
             name="key"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Key Prefix</span>}
+            label={
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                Project Key Prefix
+              </span>
+            }
             rules={[
               { required: true, message: 'Please enter project key prefix' },
               { max: 6, message: 'Max 6 characters' },
@@ -91,7 +116,11 @@ function CreateProjectModal({ open, onCancel }) {
 
           <Form.Item
             name="category"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Category</span>}
+            label={
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                Category
+              </span>
+            }
             rules={[{ required: true }]}
           >
             <Select
@@ -106,24 +135,49 @@ function CreateProjectModal({ open, onCancel }) {
           </Form.Item>
         </div>
 
+        {/* Multi-lead selection */}
         <Form.Item
-          name="lead"
-          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Lead</span>}
-          rules={[{ required: true }]}
+          name="projectLeadIds"
+          label={
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+              Project Lead(s)
+            </span>
+          }
+          rules={[{ required: true, message: 'Select at least one project lead' }]}
+          extra={
+            <span className="text-[11px] text-slate-400">
+              Select one or more project leads. Leads can manage the project team.
+            </span>
+          }
         >
           <Select
-            options={teamMembers.map((m) => ({
-              value: m.email,
-              label: m.name,
-            }))}
+            mode="multiple"
+            placeholder="Select project leads..."
+            filterOption={(input, option) =>
+              option.label.toLowerCase().includes(input.toLowerCase())
+            }
+            showSearch
+            options={teamMembers
+              .filter((m) => m.isActive !== false)
+              .map((m) => ({
+                value: m.id,
+                label: m.name,
+              }))}
           />
         </Form.Item>
 
         <Form.Item
           name="description"
-          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Description</span>}
+          label={
+            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+              Description
+            </span>
+          }
         >
-          <Input.TextArea rows={3} placeholder="Brief purpose and deliverables of this project..." />
+          <Input.TextArea
+            rows={3}
+            placeholder="Brief purpose and deliverables of this project..."
+          />
         </Form.Item>
       </Form>
     </Modal>

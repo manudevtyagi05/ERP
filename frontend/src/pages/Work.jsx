@@ -256,7 +256,7 @@ function Work() {
       </div>
 
       {/* Tasks Table */}
-      <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
+      <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
         <Table
           rowKey="id"
           columns={columns}

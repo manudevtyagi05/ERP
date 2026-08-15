@@ -47,7 +47,7 @@ function Reports() {
       {/* KPI Cards */}
       <Row gutter={[16, 16]}>
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Completion Rate
             </div>
@@ -59,7 +59,7 @@ function Reports() {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Story Points
             </div>
@@ -71,7 +71,7 @@ function Reports() {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               Open Issues
             </div>
@@ -83,7 +83,7 @@ function Reports() {
         </Col>
 
         <Col xs={24} sm={12} lg={6}>
-          <Card bordered={false} className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
+          <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]">
             <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
               In Progress
             </div>
@@ -100,7 +100,7 @@ function Reports() {
         {/* Status Distribution */}
         <Col xs={24} lg={12}>
           <Card
-            bordered={false}
+            variant="borderless"
             className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]"
             title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Issue Status Distribution</span>}
           >
@@ -134,7 +134,7 @@ function Reports() {
         {/* Priority Breakdown */}
         <Col xs={24} lg={12}>
           <Card
-            bordered={false}
+            variant="borderless"
             className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]"
             title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Priority Breakdown</span>}
           >
@@ -165,7 +165,7 @@ function Reports() {
         {/* Workload by Team Member */}
         <Col xs={24}>
           <Card
-            bordered={false}
+            variant="borderless"
             className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e]"
             title={<span className="text-sm font-semibold text-slate-800 dark:text-slate-100">Team Workload Distribution</span>}
           >
