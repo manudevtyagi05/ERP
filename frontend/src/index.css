@@ -146,3 +146,31 @@ html.dark .jira-table .ant-table-thead > tr > th {
 html.dark .jira-table .ant-table-tbody > tr:hover > td {
   background: #182236 !important;
 }
+
+/* Responsive Modal & Drawer overrides */
+.ant-modal {
+  max-width: calc(100vw - 24px) !important;
+  margin: 12px auto !important;
+}
+
+@media (max-width: 640px) {
+  .ant-modal {
+    max-width: calc(100vw - 16px) !important;
+    margin: 8px auto !important;
+  }
+  .ant-modal .ant-modal-content {
+    padding: 16px !important;
+  }
+}
+
+/* Kanban horizontal swipe on touch/small viewports */
+.kanban-board-container {
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile drawer clean styling */
+.mobile-nav-drawer .ant-drawer-body {
+  padding: 0 !important;
+}
+

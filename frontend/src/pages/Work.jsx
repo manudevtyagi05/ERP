@@ -199,7 +199,7 @@ function Work() {
           ]}
         />
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 flex-1 md:flex-none justify-start md:justify-end min-w-0">
           <Input
             placeholder="Filter tasks..."
             prefix={<SearchOutlined className="text-slate-400" />}
@@ -207,15 +207,14 @@ function Work() {
             onChange={(e) => setSearch(e.target.value)}
             allowClear
             size="small"
-            style={{ width: 170 }}
-            className="text-xs"
+            className="text-xs w-full sm:w-44"
           />
 
           <Select
             size="small"
             value={statusFilter}
             onChange={setStatusFilter}
-            style={{ width: 140 }}
+            className="w-full sm:w-36 text-xs"
             options={[
               { value: 'ALL', label: 'All Status' },
               ...Object.keys(ISSUE_STATUSES).map((k) => ({
@@ -231,7 +230,7 @@ function Work() {
             size="small"
             value={priorityFilter}
             onChange={setPriorityFilter}
-            style={{ width: 120 }}
+            className="w-full sm:w-32 text-xs"
             options={[
               { value: 'ALL', label: 'All Priority' },
               ...Object.keys(ISSUE_PRIORITIES).map((k) => ({
@@ -250,6 +249,7 @@ function Work() {
           columns={columns}
           dataSource={filteredIssues}
           pagination={{ pageSize: 10, showSizeChanger: false }}
+          scroll={{ x: 800 }}
           onRow={(record) => ({
             onClick: () => setSelectedIssueId(record.id),
             className: 'cursor-pointer',

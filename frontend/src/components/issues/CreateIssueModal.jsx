@@ -57,142 +57,144 @@ function CreateIssueModal() {
       width={580}
       destroyOnHidden
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleFinish}
-        initialValues={{
-          projectKey: projects[0]?.key || 'CORE',
-          type: 'Task',
-          priority: 'MEDIUM',
-          assigneeId: teamMembers[0]?.id,
-          storyPoints: 3,
-        }}
-        className="mt-4"
-        requiredMark={false}
-      >
-        <div className="grid grid-cols-2 gap-3">
-          <Form.Item
-            name="projectKey"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project</span>}
-            rules={[{ required: true, message: 'Please select a project' }]}
-          >
-            <Select
-              options={projects.map((p) => ({
-                value: p.key,
-                label: (
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-semibold px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {p.key}
-                    </span>
-                    <span className="truncate">{p.name}</span>
-                  </div>
-                ),
-              }))}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="type"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Issue Type</span>}
-            rules={[{ required: true }]}
-          >
-            <Select
-              options={Object.keys(ISSUE_TYPES).map((key) => ({
-                value: key,
-                label: (
-                  <div className="flex items-center gap-2">
-                    {ISSUE_TYPES[key].icon}
-                    <span>{ISSUE_TYPES[key].label}</span>
-                  </div>
-                ),
-              }))}
-            />
-          </Form.Item>
-        </div>
-
-        <Form.Item
-          name="title"
-          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Summary</span>}
-          rules={[{ required: true, message: 'Please enter issue summary' }]}
+      <div className="max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleFinish}
+          initialValues={{
+            projectKey: projects[0]?.key || 'CORE',
+            type: 'Task',
+            priority: 'MEDIUM',
+            assigneeId: teamMembers[0]?.id,
+            storyPoints: 3,
+          }}
+          className="mt-2"
+          requiredMark={false}
         >
-          <Input placeholder="Short summary of the task, feature, or bug" />
-        </Form.Item>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Form.Item
+              name="projectKey"
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project</span>}
+              rules={[{ required: true, message: 'Please select a project' }]}
+            >
+              <Select
+                options={projects.map((p) => ({
+                  value: p.key,
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs font-semibold px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        {p.key}
+                      </span>
+                      <span className="truncate">{p.name}</span>
+                    </div>
+                  ),
+                }))}
+              />
+            </Form.Item>
 
-        <Form.Item
-          name="description"
-          label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Description</span>}
-        >
-          <Input.TextArea
-            rows={3}
-            placeholder="Add any context, acceptance criteria, or reproduction steps..."
-          />
-        </Form.Item>
+            <Form.Item
+              name="type"
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Issue Type</span>}
+              rules={[{ required: true }]}
+            >
+              <Select
+                options={Object.keys(ISSUE_TYPES).map((key) => ({
+                  value: key,
+                  label: (
+                    <div className="flex items-center gap-2">
+                      {ISSUE_TYPES[key].icon}
+                      <span>{ISSUE_TYPES[key].label}</span>
+                    </div>
+                  ),
+                }))}
+              />
+            </Form.Item>
+          </div>
 
-        <div className="grid grid-cols-3 gap-3">
           <Form.Item
-            name="priority"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Priority</span>}
-            rules={[{ required: true }]}
+            name="title"
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Summary</span>}
+            rules={[{ required: true, message: 'Please enter issue summary' }]}
           >
-            <Select
-              options={Object.keys(ISSUE_PRIORITIES).map((key) => ({
-                value: key,
-                label: (
-                  <div className="flex items-center gap-1.5">
-                    {ISSUE_PRIORITIES[key].icon}
-                    <span>{ISSUE_PRIORITIES[key].label}</span>
-                  </div>
-                ),
-              }))}
+            <Input placeholder="Short summary of the task, feature, or bug" />
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Description</span>}
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="Add any context, acceptance criteria, or reproduction steps..."
             />
           </Form.Item>
 
-          <Form.Item
-            name="assigneeId"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Assignee</span>}
-            rules={[{ required: true }]}
-          >
-            <Select
-              options={teamMembers.map((m) => ({
-                value: m.id,
-                label: (
-                  <div className="flex items-center gap-1.5 truncate">
-                    <span>{m.name}</span>
-                  </div>
-                ),
-              }))}
-            />
-          </Form.Item>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Form.Item
+              name="priority"
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Priority</span>}
+              rules={[{ required: true }]}
+            >
+              <Select
+                options={Object.keys(ISSUE_PRIORITIES).map((key) => ({
+                  value: key,
+                  label: (
+                    <div className="flex items-center gap-1.5">
+                      {ISSUE_PRIORITIES[key].icon}
+                      <span>{ISSUE_PRIORITIES[key].label}</span>
+                    </div>
+                  ),
+                }))}
+              />
+            </Form.Item>
 
-          <Form.Item
-            name="storyPoints"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Story Points</span>}
-          >
-            <InputNumber min={1} max={21} style={{ width: '100%' }} />
-          </Form.Item>
-        </div>
+            <Form.Item
+              name="assigneeId"
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Assignee</span>}
+              rules={[{ required: true }]}
+            >
+              <Select
+                options={teamMembers.map((m) => ({
+                  value: m.id,
+                  label: (
+                    <div className="flex items-center gap-1.5 truncate">
+                      <span>{m.name}</span>
+                    </div>
+                  ),
+                }))}
+              />
+            </Form.Item>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Form.Item
-            name="dueDate"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Due Date</span>}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
+            <Form.Item
+              name="storyPoints"
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Story Points</span>}
+            >
+              <InputNumber min={1} max={21} style={{ width: '100%' }} />
+            </Form.Item>
+          </div>
 
-          <Form.Item
-            name="milestoneId"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Milestone</span>}
-          >
-            <Select
-              allowClear
-              placeholder="No milestone"
-              options={milestones.map((m) => ({ value: m.id, label: m.name }))}
-            />
-          </Form.Item>
-        </div>
-      </Form>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Form.Item
+              name="dueDate"
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Due Date</span>}
+            >
+              <DatePicker style={{ width: '100%' }} />
+            </Form.Item>
+
+            <Form.Item
+              name="milestoneId"
+              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Milestone</span>}
+            >
+              <Select
+                allowClear
+                placeholder="No milestone"
+                options={milestones.map((m) => ({ value: m.id, label: m.name }))}
+              />
+            </Form.Item>
+          </div>
+        </Form>
+      </div>
     </Modal>
   );
 }

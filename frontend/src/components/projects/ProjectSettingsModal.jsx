@@ -104,7 +104,7 @@ function ProjectSettingsModal({ open, onClose, project, initialTab = 'general' }
       }
       className="project-settings-modal"
     >
-      <div className="mt-3">
+      <div className="mt-2 max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
         <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
@@ -135,7 +135,7 @@ function ProjectSettingsModal({ open, onClose, project, initialTab = 'general' }
                     requiredMark={false}
                     className="max-w-2xl"
                   >
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <Form.Item
                         name="projectName"
                         label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project Name</span>}
@@ -152,7 +152,7 @@ function ProjectSettingsModal({ open, onClose, project, initialTab = 'general' }
                       </Form.Item>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <Form.Item
                         name="category"
                         label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Category</span>}
@@ -304,3 +304,4 @@ function ProjectSettingsModal({ open, onClose, project, initialTab = 'general' }
 }
 
 export default ProjectSettingsModal;
+

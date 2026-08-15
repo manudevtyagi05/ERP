@@ -243,7 +243,7 @@ function Issues() {
       {/* Filter Bar */}
       <div className="bg-white dark:bg-[#131b2e] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col gap-3">
         {/* Quick Status Buttons */}
-        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5 overflow-x-auto">
+        <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5 overflow-x-auto flex-nowrap min-w-0">
           {[
             { key: 'ALL', label: 'All Issues', count: issues.length },
             {
@@ -265,7 +265,7 @@ function Issues() {
             <button
               key={tab.key}
               onClick={() => handleStatusTab(tab.key)}
-              className={`text-xs px-3 py-1 rounded-md font-medium transition flex items-center gap-2 cursor-pointer ${
+              className={`text-xs px-3 py-1 rounded-md font-medium transition flex items-center gap-2 cursor-pointer flex-shrink-0 ${
                 statusParam === tab.key
                   ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
                   : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -287,7 +287,7 @@ function Issues() {
 
         {/* Dropdown Filters */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
             <Input
               placeholder="Search issues by summary or key..."
               prefix={<SearchOutlined className="text-slate-400" />}
@@ -295,15 +295,14 @@ function Issues() {
               onChange={(e) => setSearch(e.target.value)}
               allowClear
               size="small"
-              style={{ width: 240 }}
-              className="text-xs"
+              className="text-xs w-full sm:w-56"
             />
 
             <Select
               size="small"
               value={activeProjectKey}
               onChange={setActiveProjectKey}
-              style={{ width: 140 }}
+              className="w-full sm:w-36 text-xs"
               options={[
                 { value: 'ALL', label: 'All Projects' },
                 ...projects.map((p) => ({ value: p.key, label: p.name })),
@@ -314,7 +313,7 @@ function Issues() {
               size="small"
               value={typeFilter}
               onChange={setTypeFilter}
-              style={{ width: 110 }}
+              className="w-28 text-xs"
               options={[
                 { value: 'ALL', label: 'All Types' },
                 ...Object.keys(ISSUE_TYPES).map((k) => ({ value: k, label: ISSUE_TYPES[k].label })),
@@ -325,7 +324,7 @@ function Issues() {
               size="small"
               value={priorityFilter}
               onChange={setPriorityFilter}
-              style={{ width: 120 }}
+              className="w-28 text-xs"
               options={[
                 { value: 'ALL', label: 'All Priority' },
                 ...Object.keys(ISSUE_PRIORITIES).map((k) => ({
@@ -339,7 +338,7 @@ function Issues() {
               size="small"
               value={assigneeFilter}
               onChange={setAssigneeFilter}
-              style={{ width: 140 }}
+              className="w-36 text-xs"
               options={[
                 { value: 'ALL', label: 'All Assignees' },
                 ...teamMembers.map((m) => ({ value: m.id, label: m.name })),
@@ -377,6 +376,7 @@ function Issues() {
           columns={columns}
           dataSource={filteredIssues}
           pagination={{ pageSize: 12, showSizeChanger: false }}
+          scroll={{ x: 850 }}
           onRow={(record) => ({
             onClick: () => setSelectedIssueId(record.id),
             className: 'cursor-pointer',

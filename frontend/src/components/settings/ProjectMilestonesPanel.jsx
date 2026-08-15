@@ -172,7 +172,7 @@ function ProjectMilestonesPanel({ project }) {
 
       {loadError && <Alert type="error" showIcon message={loadError} />}
 
-      <Table rowKey="id" columns={columns} dataSource={milestones} loading={loading} pagination={false} size="small" />
+      <Table rowKey="id" columns={columns} dataSource={milestones} loading={loading} pagination={false} size="small" scroll={{ x: 550 }} />
 
       <Modal
         title={modal.mode === 'create' ? 'Add milestone' : 'Edit milestone'}
@@ -190,7 +190,7 @@ function ProjectMilestonesPanel({ project }) {
           <Form.Item name="description" label="Description">
             <Input.TextArea rows={2} />
           </Form.Item>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item name="startDate" label="Start date">
               <DatePicker style={{ width: '100%' }} />
             </Form.Item>

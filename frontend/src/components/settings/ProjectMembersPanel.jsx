@@ -271,6 +271,7 @@ function ProjectMembersPanel({ project }) {
         loading={loading}
         pagination={false}
         size="small"
+        scroll={{ x: 600 }}
         locale={{ emptyText: 'No members yet. Add your first team member.' }}
       />
 

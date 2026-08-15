@@ -149,14 +149,14 @@ function SettingsView() {
               children: (
                 <div className="pt-2 max-w-2xl flex flex-col gap-6">
                   {/* User summary card header */}
-                  <div className="flex items-center gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/40">
                     <Avatar
                       size={54}
                       icon={<UserOutlined />}
                       className="bg-blue-600 text-white font-semibold text-xl border-2 border-white dark:border-slate-700 shadow-sm flex-shrink-0"
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <span className="font-bold text-slate-800 dark:text-slate-100 text-base">
                           {[user?.firstName, user?.lastName].filter(Boolean).join(' ')}
                         </span>
@@ -164,14 +164,14 @@ function SettingsView() {
                           {user?.role}
                         </Tag>
                       </div>
-                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-                        <MailOutlined className="text-slate-400" />
-                        <span>{user?.email}</span>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 truncate">
+                        <MailOutlined className="text-slate-400 flex-shrink-0" />
+                        <span className="truncate">{user?.email}</span>
                       </div>
                       {user?.department && (
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-                          <ApartmentOutlined className="text-slate-400" />
-                          <span>{user?.department}</span>
+                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5 truncate">
+                          <ApartmentOutlined className="text-slate-400 flex-shrink-0" />
+                          <span className="truncate">{user?.department}</span>
                         </div>
                       )}
                     </div>
@@ -183,7 +183,7 @@ function SettingsView() {
                     onFinish={handleSaveProfile}
                     requiredMark={false}
                   >
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <Form.Item
                         name="firstName"
                         label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">First Name</span>}
@@ -201,7 +201,7 @@ function SettingsView() {
                       </Form.Item>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <Form.Item
                         name="email"
                         label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Email Address</span>}

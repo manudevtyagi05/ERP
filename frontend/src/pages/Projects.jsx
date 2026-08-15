@@ -315,7 +315,7 @@ function Projects() {
           ]}
         />
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-3 flex-wrap">
           <Input
             placeholder="Search projects..."
             prefix={<SearchOutlined className="text-slate-400" />}
@@ -323,8 +323,7 @@ function Projects() {
             onChange={(e) => setSearch(e.target.value)}
             allowClear
             size="small"
-            style={{ width: 200 }}
-            className="text-xs"
+            className="text-xs flex-1 sm:flex-none sm:w-48"
           />
 
           <Segmented
@@ -355,22 +354,22 @@ function Projects() {
               <div>
                 {/* Header */}
                 <div className="flex items-start justify-between gap-2 mb-3">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <div
                       className="w-9 h-9 rounded-lg text-white font-mono font-bold text-xs flex items-center justify-center flex-shrink-0"
                       style={{ backgroundColor: project.avatarBg || '#2563eb' }}
                     >
                       {project.key}
                     </div>
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 line-clamp-1">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-slate-800 dark:text-slate-100 truncate">
                         {project.name}
                       </h3>
-                      <span className="text-[11px] text-slate-400 dark:text-slate-500">{project.category}</span>
+                      <span className="text-[11px] text-slate-400 dark:text-slate-500 truncate block">{project.category}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-shrink-0">
                     <Tooltip title={project.star ? 'Unstar' : 'Star project'}>
                       <Button
                         type="text"
@@ -419,7 +418,7 @@ function Projects() {
 
                 <div className="flex items-center justify-between mt-3 text-xs text-slate-500 dark:text-slate-400">
                   {/* Multi-lead display */}
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
                     {project.projectLeads && project.projectLeads.length > 0 ? (
                       <ProjectLeadsDisplay leads={project.projectLeads} />
                     ) : (
@@ -429,15 +428,15 @@ function Projects() {
                           src={project.leadAvatar}
                           size={20}
                           icon={<UserOutlined />}
-                          className="bg-slate-200 dark:bg-slate-700"
+                          className="bg-slate-200 dark:bg-slate-700 flex-shrink-0"
                         />
-                        <span className="truncate max-w-[100px] text-[11px] text-slate-700 dark:text-slate-300">
+                        <span className="truncate max-w-[90px] text-[11px] text-slate-700 dark:text-slate-300">
                           {project.lead}
                         </span>
                       </>
                     )}
                   </div>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500">
+                  <span className="text-[11px] text-slate-400 dark:text-slate-500 flex-shrink-0">
                     {project.completedIssues}/{project.totalIssues} issues
                   </span>
                 </div>
@@ -460,6 +459,7 @@ function Projects() {
             columns={columns}
             dataSource={filteredProjects}
             pagination={false}
+            scroll={{ x: 750 }}
             onRow={(record) => ({
               onClick: () => {
                 setActiveProjectKey(record.key);

@@ -58,12 +58,12 @@ function IssueRow({ issue, onSelect, onStatusChange }) {
 
   return (
     <div
-      className="py-3 flex items-center justify-between gap-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 -mx-4 px-4 transition group rounded-md cursor-pointer"
+      className="py-2.5 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 hover:bg-slate-50/80 dark:hover:bg-slate-800/60 -mx-2 sm:-mx-4 px-2 sm:px-4 transition group rounded-md cursor-pointer min-w-0"
       onClick={() => onSelect(issue.id)}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <Tooltip title={typeConfig.label}>
-          <span className="p-1 rounded bg-slate-100 dark:bg-slate-800 flex items-center">{typeConfig.icon}</span>
+          <span className="p-1 rounded bg-slate-100 dark:bg-slate-800 flex items-center flex-shrink-0">{typeConfig.icon}</span>
         </Tooltip>
         <span className="font-mono text-xs font-semibold text-slate-500 dark:text-slate-400 flex-shrink-0">{issue.key}</span>
         <span className="text-xs font-medium text-slate-800 dark:text-slate-200 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
@@ -71,7 +71,7 @@ function IssueRow({ issue, onSelect, onStatusChange }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
         <Tooltip title={`Priority: ${priorityConfig.label}`}>
           <span className="flex items-center">{priorityConfig.icon}</span>
         </Tooltip>
@@ -80,7 +80,7 @@ function IssueRow({ issue, onSelect, onStatusChange }) {
           size="small"
           value={issue.status}
           onChange={(newStatus) => onStatusChange(issue.id, newStatus)}
-          style={{ width: 110 }}
+          style={{ width: 100 }}
           options={Object.keys(ISSUE_STATUSES).map((k) => ({
             value: k,
             label: ISSUE_STATUSES[k].label,
@@ -413,41 +413,41 @@ function MemberDashboard() {
 
       </div>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={4}>
+      <Row gutter={[12, 12]}>
+        <Col xs={12} sm={8} lg={4}>
           <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">To Do</div>
-            <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myOpen.length}</div>
+            <div className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">To Do</div>
+            <div className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myOpen.length}</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">In Progress</div>
-            <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myInProgress.length}</div>
+            <div className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">In Progress</div>
+            <div className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myInProgress.length}</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed</div>
-            <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myCompleted.length}</div>
+            <div className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Completed</div>
+            <div className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myCompleted.length}</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card variant="borderless" className="shadow-sm border border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-900/20">
-            <div className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Due Today</div>
-            <div className="text-2xl font-bold text-amber-800 dark:text-amber-300 mt-1">{myDueToday.length}</div>
+            <div className="text-[11px] sm:text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">Due Today</div>
+            <div className="text-xl sm:text-2xl font-bold text-amber-800 dark:text-amber-300 mt-1">{myDueToday.length}</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card variant="borderless" className="shadow-sm border border-red-200 dark:border-red-800/60 bg-red-50/40 dark:bg-red-900/20">
-            <div className="text-xs font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider">Overdue</div>
-            <div className="text-2xl font-bold text-red-800 dark:text-red-300 mt-1">{myOverdue.length}</div>
+            <div className="text-[11px] sm:text-xs font-semibold text-red-700 dark:text-red-400 uppercase tracking-wider">Overdue</div>
+            <div className="text-xl sm:text-2xl font-bold text-red-800 dark:text-red-300 mt-1">{myOverdue.length}</div>
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card variant="borderless" className="shadow-sm border border-slate-200/70 dark:border-slate-800 dark:bg-[#131b2e]">
-            <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">My Projects</div>
-            <div className="text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myProjectKeys.size}</div>
+            <div className="text-[11px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">My Projects</div>
+            <div className="text-xl sm:text-2xl font-bold text-slate-800 dark:text-slate-100 mt-1">{myProjectKeys.size}</div>
           </Card>
         </Col>
       </Row>

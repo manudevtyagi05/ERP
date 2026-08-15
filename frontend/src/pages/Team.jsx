@@ -274,11 +274,11 @@ function Team() {
         )}
       </div>
 
-      <Space wrap>
+      <div className="flex flex-wrap items-center gap-2.5">
         <Input.Search
           placeholder="Search name or email"
           allowClear
-          style={{ width: 240 }}
+          className="w-full sm:w-56"
           onSearch={(value) => {
             setSearch(value);
             setPage(1);
@@ -287,7 +287,7 @@ function Team() {
         <Select
           placeholder="Role"
           allowClear
-          style={{ width: 160 }}
+          className="w-full sm:w-40"
           options={ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
           onChange={(value) => {
             setRole(value);
@@ -297,7 +297,7 @@ function Team() {
         <Select
           placeholder="Status"
           allowClear
-          style={{ width: 140 }}
+          className="w-full sm:w-36"
           options={[
             { value: 'true', label: 'Active' },
             { value: 'false', label: 'Inactive' },
@@ -307,7 +307,7 @@ function Team() {
             setPage(1);
           }}
         />
-      </Space>
+      </div>
 
       {loadError && <Alert type="error" showIcon message={loadError} />}
 
@@ -316,6 +316,7 @@ function Team() {
         columns={columns}
         dataSource={items}
         loading={loading}
+        scroll={{ x: 700 }}
         pagination={{
           current: page,
           pageSize: PAGE_SIZE,

@@ -64,7 +64,7 @@ function IssueDetailDrawer() {
     return (
       <Drawer
         placement="right"
-        width={680}
+        width="min(680px, 100vw)"
         onClose={() => setSelectedIssueId(null)}
         open={Boolean(selectedIssueId)}
         closeIcon={<CloseOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
@@ -186,15 +186,15 @@ function IssueDetailDrawer() {
   return (
     <Drawer
       title={
-        <div className="flex items-center justify-between w-full pr-4">
-          <div className="flex items-center gap-2">
-            <span className="p-1 rounded bg-slate-100 dark:bg-slate-800 flex items-center">{issueTypeConfig.icon}</span>
-            <span className="font-mono font-semibold text-slate-700 dark:text-slate-200 text-sm">{selectedIssue.key}</span>
-            <Tag color={issueTypeConfig.color} className="!mr-0">
+        <div className="flex items-center justify-between w-full pr-2 sm:pr-4 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 truncate">
+            <span className="p-1 rounded bg-slate-100 dark:bg-slate-800 flex items-center flex-shrink-0">{issueTypeConfig.icon}</span>
+            <span className="font-mono font-semibold text-slate-700 dark:text-slate-200 text-sm flex-shrink-0">{selectedIssue.key}</span>
+            <Tag color={issueTypeConfig.color} className="!mr-0 truncate">
               {issueTypeConfig.label}
             </Tag>
           </div>
-          <Space>
+          <Space className="flex-shrink-0">
             <Popconfirm
               title="Delete this issue?"
               description="This action cannot be undone."
@@ -210,19 +210,19 @@ function IssueDetailDrawer() {
         </div>
       }
       placement="right"
-      width={680}
+      width="min(680px, 100vw)"
       onClose={handleClose}
       open={Boolean(selectedIssueId)}
       closeIcon={<CloseOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
       styles={{
-        body: { padding: '20px' },
+        body: { padding: '16px' },
         header: {
           borderBottom: isDark ? '1px solid #1e293b' : '1px solid #e2e8f0',
-          padding: '12px 20px',
+          padding: '12px 16px',
         },
       }}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-w-0">
         {/* Main Content Column */}
         <div className="md:col-span-2 flex flex-col gap-5">
           <div>

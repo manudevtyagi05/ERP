@@ -59,8 +59,10 @@ function CalendarView() {
       </div>
 
       {/* Calendar Card */}
-      <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-2">
-        <Calendar cellRender={dateCellRender} />
+      <Card variant="borderless" className="shadow-sm border border-slate-200/80 dark:border-slate-800 dark:bg-[#131b2e] p-2 overflow-x-auto min-w-0">
+        <div className="min-w-[600px] sm:min-w-0">
+          <Calendar cellRender={dateCellRender} />
+        </div>
       </Card>
     </div>
   );

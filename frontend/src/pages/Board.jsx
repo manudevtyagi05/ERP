@@ -114,8 +114,8 @@ function Board() {
       </div>
 
       {/* Filter Control Bar */}
-      <div className="bg-white dark:bg-[#131b2e] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-sm">
-        <div className="flex flex-wrap items-center gap-2.5">
+      <div className="bg-white dark:bg-[#131b2e] p-3 rounded-lg border border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 shadow-sm min-w-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 min-w-0">
           <Input
             placeholder="Search board..."
             prefix={<SearchOutlined className="text-slate-400" />}
@@ -123,15 +123,14 @@ function Board() {
             onChange={(e) => setSearch(e.target.value)}
             allowClear
             size="small"
-            style={{ width: 180 }}
-            className="text-xs"
+            className="text-xs w-full sm:w-44"
           />
 
           <Select
             size="small"
             value={activeProjectKey}
             onChange={setActiveProjectKey}
-            style={{ width: 150 }}
+            className="w-full sm:w-36 text-xs"
             options={[
               { value: 'ALL', label: 'All Projects' },
               ...projects.map((p) => ({ value: p.key, label: `${p.key} - ${p.name}` })),
@@ -139,11 +138,11 @@ function Board() {
           />
 
           {/* Quick Assignee Avatar Filter Pills */}
-          <div className="flex items-center gap-1 pl-1">
+          <div className="flex items-center gap-1 overflow-x-auto max-w-full py-0.5 min-w-0">
             <Tooltip title="Filter: All Assignees">
               <button
                 onClick={() => setSelectedAssignee('ALL')}
-                className={`text-xs px-2 py-0.5 rounded-full border transition cursor-pointer ${
+                className={`text-xs px-2 py-0.5 rounded-full border transition cursor-pointer flex-shrink-0 ${
                   selectedAssignee === 'ALL'
                     ? 'bg-slate-800 dark:bg-blue-600 text-white border-slate-800 dark:border-blue-600'
                     : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
@@ -158,13 +157,13 @@ function Board() {
                   onClick={() =>
                     setSelectedAssignee((prev) => (prev === member.id ? 'ALL' : member.id))
                   }
-                  className={`cursor-pointer rounded-full p-0.5 transition ${
+                  className={`cursor-pointer rounded-full p-0.5 transition flex-shrink-0 ${
                     selectedAssignee === member.id
                       ? 'ring-2 ring-blue-600 ring-offset-1 dark:ring-offset-slate-900 scale-105'
                       : 'opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <Avatar size={24} icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
+                  <Avatar size={22} icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
                 </div>
               </Tooltip>
             ))}
@@ -174,7 +173,7 @@ function Board() {
             size="small"
             type={onlyMyIssues ? 'primary' : 'default'}
             onClick={() => setOnlyMyIssues((prev) => !prev)}
-            className="text-xs"
+            className="text-xs flex-shrink-0"
           >
             Only My Issues
           </Button>
@@ -183,7 +182,7 @@ function Board() {
             size="small"
             value={selectedType}
             onChange={setSelectedType}
-            style={{ width: 110 }}
+            className="w-28 text-xs"
             options={[
               { value: 'ALL', label: 'All Types' },
               ...Object.keys(ISSUE_TYPES).map((k) => ({ value: k, label: ISSUE_TYPES[k].label })),
@@ -194,7 +193,7 @@ function Board() {
             size="small"
             value={selectedPriority}
             onChange={setSelectedPriority}
-            style={{ width: 110 }}
+            className="w-28 text-xs"
             options={[
               { value: 'ALL', label: 'All Priority' },
               ...Object.keys(ISSUE_PRIORITIES).map((k) => ({
@@ -222,7 +221,7 @@ function Board() {
               setOnlyMyIssues(false);
               setActiveProjectKey('ALL');
             }}
-            className="text-xs text-blue-600 dark:text-blue-400"
+            className="text-xs text-blue-600 dark:text-blue-400 self-end sm:self-auto"
           >
             Reset Filters
           </Button>
@@ -230,14 +229,14 @@ function Board() {
       </div>
 
       {/* Kanban Board Columns Container */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 items-start">
+      <div className="flex flex-row overflow-x-auto snap-x snap-mandatory gap-3.5 items-start pb-4 kanban-board-container lg:grid lg:grid-cols-5 lg:overflow-x-visible lg:pb-0 min-w-0">
         {KANBAN_COLUMNS.map((column) => {
           const columnIssues = filteredIssues.filter((i) => i.status === column.id);
 
           return (
             <div
               key={column.id}
-              className="kanban-column flex flex-col p-2.5 rounded-lg min-h-[500px]"
+              className="kanban-column flex flex-col p-2.5 rounded-lg min-h-[480px] w-[280px] sm:w-[300px] flex-shrink-0 snap-center lg:w-auto lg:flex-shrink min-w-0"
             >
               {/* Column Header */}
               <div className="flex items-center justify-between px-1.5 py-1 mb-2">
@@ -294,7 +293,7 @@ function Board() {
                     <div
                       key={issue.id}
                       onClick={() => setSelectedIssueId(issue.id)}
-                      className="kanban-card bg-white dark:bg-[#162035] p-3 rounded-md border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex flex-col gap-2.5 group"
+                      className="kanban-card bg-white dark:bg-[#162035] p-3 rounded-md border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex flex-col gap-2.5 group cursor-pointer"
                     >
                       {/* Card Header: Type, Key, and Quick Menu */}
                       <div className="flex items-center justify-between">

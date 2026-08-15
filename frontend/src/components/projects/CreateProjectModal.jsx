@@ -60,126 +60,128 @@ function CreateProjectModal({ open, onCancel }) {
       width={540}
       destroyOnHidden
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleFinish}
-        initialValues={{
-          category: 'Software Architecture',
-          // Default: current user is the first project lead
-          projectLeadIds: user?.id ? [user.id] : [],
-        }}
-        className="mt-4"
-        requiredMark={false}
-      >
-        <Form.Item
-          name="name"
-          label={
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-              Project Name
-            </span>
-          }
-          rules={[{ required: true, message: 'Please enter project name' }]}
+      <div className="max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleFinish}
+          initialValues={{
+            category: 'Software Architecture',
+            // Default: current user is the first project lead
+            projectLeadIds: user?.id ? [user.id] : [],
+          }}
+          className="mt-2"
+          requiredMark={false}
         >
-          <Input
-            placeholder="e.g., Supply Chain Gateway"
-            onChange={(e) => {
-              const name = e.target.value;
-              if (name && !form.isFieldTouched('key')) {
-                const autoKey = name
-                  .split(' ')
-                  .map((w) => w[0])
-                  .join('')
-                  .toUpperCase()
-                  .slice(0, 4);
-                form.setFieldsValue({ key: autoKey });
-              }
-            }}
-          />
-        </Form.Item>
-
-        <div className="grid grid-cols-2 gap-3">
           <Form.Item
-            name="key"
+            name="name"
             label={
               <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                Project Key Prefix
+                Project Name
               </span>
             }
-            rules={[
-              { required: true, message: 'Please enter project key prefix' },
-              { max: 6, message: 'Max 6 characters' },
-            ]}
+            rules={[{ required: true, message: 'Please enter project name' }]}
           >
-            <Input placeholder="e.g., SCG" style={{ textTransform: 'uppercase' }} />
-          </Form.Item>
-
-          <Form.Item
-            name="category"
-            label={
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                Category
-              </span>
-            }
-            rules={[{ required: true }]}
-          >
-            <Select
-              options={[
-                { value: 'Software Architecture', label: 'Software Architecture' },
-                { value: 'Design Engineering', label: 'Design Engineering' },
-                { value: 'Fintech Service', label: 'Fintech Service' },
-                { value: 'DevOps & Reliability', label: 'DevOps & Reliability' },
-                { value: 'Operations', label: 'Operations' },
-              ]}
+            <Input
+              placeholder="e.g., Supply Chain Gateway"
+              onChange={(e) => {
+                const name = e.target.value;
+                if (name && !form.isFieldTouched('key')) {
+                  const autoKey = name
+                    .split(' ')
+                    .map((w) => w[0])
+                    .join('')
+                    .toUpperCase()
+                    .slice(0, 4);
+                  form.setFieldsValue({ key: autoKey });
+                }
+              }}
             />
           </Form.Item>
-        </div>
 
-        {/* Multi-lead selection */}
-        <Form.Item
-          name="projectLeadIds"
-          label={
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-              Project Lead(s)
-            </span>
-          }
-          rules={[{ required: true, message: 'Select at least one project lead' }]}
-          extra={
-            <span className="text-[11px] text-slate-400">
-              Select one or more project leads. Leads can manage the project team.
-            </span>
-          }
-        >
-          <Select
-            mode="multiple"
-            placeholder="Select project leads..."
-            filterOption={(input, option) =>
-              option.label.toLowerCase().includes(input.toLowerCase())
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Form.Item
+              name="key"
+              label={
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  Project Key Prefix
+                </span>
+              }
+              rules={[
+                { required: true, message: 'Please enter project key prefix' },
+                { max: 6, message: 'Max 6 characters' },
+              ]}
+            >
+              <Input placeholder="e.g., SCG" style={{ textTransform: 'uppercase' }} />
+            </Form.Item>
+
+            <Form.Item
+              name="category"
+              label={
+                <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                  Category
+                </span>
+              }
+              rules={[{ required: true }]}
+            >
+              <Select
+                options={[
+                  { value: 'Software Architecture', label: 'Software Architecture' },
+                  { value: 'Design Engineering', label: 'Design Engineering' },
+                  { value: 'Fintech Service', label: 'Fintech Service' },
+                  { value: 'DevOps & Reliability', label: 'DevOps & Reliability' },
+                  { value: 'Operations', label: 'Operations' },
+                ]}
+              />
+            </Form.Item>
+          </div>
+
+          {/* Multi-lead selection */}
+          <Form.Item
+            name="projectLeadIds"
+            label={
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                Project Lead(s)
+              </span>
             }
-            showSearch
-            options={teamMembers
-              .filter((m) => m.isActive !== false)
-              .map((m) => ({
-                value: m.id,
-                label: m.name,
-              }))}
-          />
-        </Form.Item>
+            rules={[{ required: true, message: 'Select at least one project lead' }]}
+            extra={
+              <span className="text-[11px] text-slate-400">
+                Select one or more project leads. Leads can manage the project team.
+              </span>
+            }
+          >
+            <Select
+              mode="multiple"
+              placeholder="Select project leads..."
+              filterOption={(input, option) =>
+                option.label.toLowerCase().includes(input.toLowerCase())
+              }
+              showSearch
+              options={teamMembers
+                .filter((m) => m.isActive !== false)
+                .map((m) => ({
+                  value: m.id,
+                  label: m.name,
+                }))}
+            />
+          </Form.Item>
 
-        <Form.Item
-          name="description"
-          label={
-            <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-              Description
-            </span>
-          }
-        >
-          <Input.TextArea
-            rows={3}
-            placeholder="Brief purpose and deliverables of this project..."
-          />
-        </Form.Item>
-      </Form>
+          <Form.Item
+            name="description"
+            label={
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                Description
+              </span>
+            }
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="Brief purpose and deliverables of this project..."
+            />
+          </Form.Item>
+        </Form>
+      </div>
     </Modal>
   );
 }

@@ -37,59 +37,63 @@ function StaffFormModal({ open, mode, initialValues, submitting, error, onCancel
       destroyOnHidden
     >
       {error && <Alert type="error" showIcon message={error} className="mb-4" />}
-      <Form form={form} layout="vertical" requiredMark={false}>
-        <Form.Item
-          label="First name"
-          name="firstName"
-          rules={[{ required: true, message: 'First name is required' }]}
-        >
-          <Input prefix={<UserOutlined />} placeholder="Jane" />
-        </Form.Item>
+      <div className="max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
+        <Form form={form} layout="vertical" requiredMark={false}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Form.Item
+              label="First name"
+              name="firstName"
+              rules={[{ required: true, message: 'First name is required' }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Jane" />
+            </Form.Item>
 
-        <Form.Item
-          label="Last name"
-          name="lastName"
-          rules={[{ required: true, message: 'Last name is required' }]}
-        >
-          <Input prefix={<UserOutlined />} placeholder="Doe" />
-        </Form.Item>
+            <Form.Item
+              label="Last name"
+              name="lastName"
+              rules={[{ required: true, message: 'Last name is required' }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Doe" />
+            </Form.Item>
+          </div>
 
-        <Form.Item
-          label="Email"
-          name="email"
-          rules={[
-            { required: true, message: 'Email is required' },
-            { type: 'email', message: 'Enter a valid email address' },
-          ]}
-        >
-          <Input prefix={<MailOutlined />} placeholder="jane@company.com" autoComplete="off" />
-        </Form.Item>
-
-        {!isEdit && (
           <Form.Item
-            label="Password"
-            name="password"
+            label="Email"
+            name="email"
             rules={[
-              { required: true, message: 'Password is required' },
-              { min: 8, message: 'Password must be at least 8 characters' },
+              { required: true, message: 'Email is required' },
+              { type: 'email', message: 'Enter a valid email address' },
             ]}
           >
-            <Input.Password prefix={<LockOutlined />} placeholder="At least 8 characters" autoComplete="new-password" />
+            <Input prefix={<MailOutlined />} placeholder="jane@company.com" autoComplete="off" />
           </Form.Item>
-        )}
 
-        {!isEdit && (
-          <Form.Item label="Role" name="role" rules={[{ required: true, message: 'Role is required' }]}>
-            <Select
-              options={ROLES.map((role) => ({ value: role, label: ROLE_LABELS[role] }))}
-            />
+          {!isEdit && (
+            <Form.Item
+              label="Password"
+              name="password"
+              rules={[
+                { required: true, message: 'Password is required' },
+                { min: 8, message: 'Password must be at least 8 characters' },
+              ]}
+            >
+              <Input.Password prefix={<LockOutlined />} placeholder="At least 8 characters" autoComplete="new-password" />
+            </Form.Item>
+          )}
+
+          {!isEdit && (
+            <Form.Item label="Role" name="role" rules={[{ required: true, message: 'Role is required' }]}>
+              <Select
+                options={ROLES.map((role) => ({ value: role, label: ROLE_LABELS[role] }))}
+              />
+            </Form.Item>
+          )}
+
+          <Form.Item label="Department" name="department">
+            <Input prefix={<ApartmentOutlined />} placeholder="Engineering" />
           </Form.Item>
-        )}
-
-        <Form.Item label="Department" name="department">
-          <Input prefix={<ApartmentOutlined />} placeholder="Engineering" />
-        </Form.Item>
-      </Form>
+        </Form>
+      </div>
     </Modal>
   );
 }
