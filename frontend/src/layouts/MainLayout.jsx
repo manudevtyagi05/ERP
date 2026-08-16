@@ -409,27 +409,18 @@ function MainLayout() {
       <Layout className="h-screen flex flex-col min-w-0 overflow-hidden !bg-slate-50 dark:!bg-[#090d16]">
         {/* Header Bar */}
         <Header className="!bg-white dark:!bg-[#0e1526] border-b border-slate-200/80 dark:border-slate-800 px-3 sm:px-4 md:px-6 h-14 flex items-center justify-between flex-shrink-0 z-40 transition-colors">
-          {/* Left: Mobile menu toggle / Desktop collapse toggle & Breadcrumbs */}
+          {/* Left: Mobile menu toggle / Breadcrumbs */}
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            {/* Mobile Hamburger Button */}
-            <Button
-              type="text"
-              size="small"
-              icon={<MenuOutlined className="text-slate-600 dark:text-slate-300 text-base" />}
-              onClick={() => setMobileDrawerOpen(true)}
-              className="md:hidden !w-8 !h-8 flex items-center justify-center !p-0 flex-shrink-0"
-            />
-
-            {/* Desktop / Tablet Unfold Button */}
-            {collapsed && (
+            {/* Mobile Hamburger Button (visible only on mobile screens) */}
+            <div className="block md:hidden">
               <Button
                 type="text"
                 size="small"
-                icon={<MenuUnfoldOutlined className="text-slate-500 dark:text-slate-400" />}
-                onClick={() => setCollapsed(false)}
-                className="hidden md:flex !w-8 !h-8 items-center justify-center !p-0 flex-shrink-0"
+                icon={<MenuOutlined className="text-slate-600 dark:text-slate-300 text-base" />}
+                onClick={() => setMobileDrawerOpen(true)}
+                className="!w-8 !h-8 flex items-center justify-center !p-0 flex-shrink-0"
               />
-            )}
+            </div>
 
             {/* Breadcrumbs (collapses on tiny mobile viewports) */}
             <div className="min-w-0 truncate">
