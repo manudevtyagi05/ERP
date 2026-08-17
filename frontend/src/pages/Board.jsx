@@ -352,8 +352,8 @@ function Board() {
                       )}
 
                       {/* Card Footer: Priority, Story Points, Assignee */}
-                      <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 mt-0.5">
-                        <div className="flex items-center gap-1.5">
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 mt-0.5 gap-2 min-w-0">
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
                           <Tooltip title={`Priority: ${priorityConfig.label}`}>
                             <span className="flex items-center">{priorityConfig.icon}</span>
                           </Tooltip>
@@ -364,13 +364,24 @@ function Board() {
                           )}
                         </div>
 
-                        <Tooltip title={issue.assignee?.name || 'Unassigned'}>
-                          <Avatar
-                            src={issue.assignee?.avatar}
-                            size={20}
-                            icon={<UserOutlined />}
-                            className="border border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-700"
-                          />
+                        <Tooltip title={issue.assignee?.name ? `Assignee: ${issue.assignee.name}` : 'Unassigned'}>
+                          <div className="flex items-center gap-1.5 min-w-0 max-w-[130px] sm:max-w-[150px] md:max-w-[160px] justify-end">
+                            <Avatar
+                              src={issue.assignee?.avatar}
+                              size={20}
+                              icon={<UserOutlined />}
+                              className="border border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-700 flex-shrink-0 text-[10px]"
+                            />
+                            <span
+                              className={`text-[11px] truncate ${
+                                issue.assignee?.name
+                                  ? 'font-medium text-slate-600 dark:text-slate-300'
+                                  : 'text-slate-400 dark:text-slate-500 italic'
+                              }`}
+                            >
+                              {issue.assignee?.name || 'Unassigned'}
+                            </span>
+                          </div>
                         </Tooltip>
                       </div>
                     </div>
