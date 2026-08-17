@@ -5,6 +5,7 @@ import GuestRoute from '../components/GuestRoute';
 import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
 import Board from '../pages/Board';
+import Backlog from '../pages/Backlog';
 import Projects from '../pages/Projects';
 import Work from '../pages/Work';
 import Issues from '../pages/Issues';
@@ -26,6 +27,7 @@ function AppRoutes() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/board" element={<Board />} />
+          <Route path="/backlog" element={<Backlog />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/work" element={<Work />} />
           <Route path="/work/:filter" element={<Work />} />

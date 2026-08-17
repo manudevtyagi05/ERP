@@ -29,6 +29,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MenuOutlined,
+  UnorderedListOutlined,
   ThunderboltFilled,
   SunOutlined,
   MoonOutlined,
@@ -108,6 +109,11 @@ function MainLayout() {
       key: '/board',
       icon: <AppstoreOutlined style={{ fontSize: 16 }} />,
       label: 'Board',
+    },
+    {
+      key: '/backlog',
+      icon: <UnorderedListOutlined style={{ fontSize: 16 }} />,
+      label: 'Backlog',
     },
     {
       key: 'projects-group',
@@ -256,6 +262,7 @@ function MainLayout() {
     }
 
     if (currentPath === '/board') items.push({ title: 'Kanban Board' });
+    else if (currentPath === '/backlog') items.push({ title: 'Backlog & Sprints' });
     else if (currentPath.startsWith('/projects')) items.push({ title: 'Projects' });
     else if (currentPath.startsWith('/work')) items.push({ title: 'Work Directory' });
     else if (currentPath.startsWith('/issues')) items.push({ title: 'Issues Tracker' });

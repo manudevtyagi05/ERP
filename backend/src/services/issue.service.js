@@ -468,6 +468,23 @@ async function toggleSubtask(companyId, id, subtaskId) {
   return issue.toSafeJSON();
 }
 
+async function reorderIssues(companyId, sprintId, orderedIds) {
+  if (!Array.isArray(orderedIds) || orderedIds.length === 0) {
+    return { message: 'Order updated' };
+  }
+
+  await Issue.bulkWrite(
+    orderedIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id, companyId, deletedAt: null },
+        update: { $set: { sprintId: sprintId || null, backlogOrder: index } },
+      },
+    }))
+  );
+
+  return { message: 'Order updated' };
+}
+
 async function getActivity(companyId, id) {
   const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
   if (!issue) {
@@ -525,6 +542,7 @@ module.exports = {
   deleteIssue,
   addComment,
   toggleSubtask,
+  reorderIssues,
   getActivity,
   getStats,
 };

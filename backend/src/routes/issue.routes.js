@@ -10,6 +10,7 @@ const {
   deleteIssue,
   addComment,
   toggleSubtask,
+  reorderIssues,
   getActivity,
 } = require('../controllers/issue.controller');
 const { authenticate, requirePermission } = require('../middleware/auth');
@@ -21,6 +22,7 @@ router.use(authenticate);
 
 router.get('/', requirePermission(PERMISSIONS.ISSUE_READ), listIssues);
 router.get('/stats', requirePermission(PERMISSIONS.ISSUE_READ), getStats);
+router.patch('/reorder', requirePermission(PERMISSIONS.ISSUE_UPDATE), reorderIssues);
 router.get('/:id', requirePermission(PERMISSIONS.ISSUE_READ), getIssue);
 router.get('/:id/activity', requirePermission(PERMISSIONS.ISSUE_READ), getActivity);
 router.post('/', requirePermission(PERMISSIONS.ISSUE_CREATE), createIssue);

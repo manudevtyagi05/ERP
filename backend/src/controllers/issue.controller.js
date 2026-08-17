@@ -56,6 +56,12 @@ const toggleSubtask = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, { message: 'Subtask toggled', data });
 });
 
+const reorderIssues = asyncHandler(async (req, res) => {
+  const { sprintId, orderedIds } = req.body;
+  const data = await issueService.reorderIssues(req.company._id, sprintId, orderedIds);
+  return ApiResponse.success(res, { message: 'Issues reordered', data });
+});
+
 const getActivity = asyncHandler(async (req, res) => {
   const data = await issueService.getActivity(req.company._id, req.params.id);
   return ApiResponse.success(res, { message: 'Issue activity retrieved', data });
@@ -72,5 +78,6 @@ module.exports = {
   deleteIssue,
   addComment,
   toggleSubtask,
+  reorderIssues,
   getActivity,
 };

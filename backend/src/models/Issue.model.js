@@ -42,6 +42,7 @@ const ACTIVITY_TYPES = [
   'COMMENT_ADDED',
   'COMPLETED',
   'REOPENED',
+  'SPRINT_CHANGED',
 ];
 
 const activitySchema = new mongoose.Schema(
@@ -152,6 +153,16 @@ const issueSchema = new mongoose.Schema(
       ref: 'Milestone',
       default: null,
     },
+    sprintId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Sprint',
+      default: null,
+      index: true,
+    },
+    backlogOrder: {
+      type: Number,
+      default: 0,
+    },
     labels: {
       type: [String],
       default: [],
@@ -221,6 +232,8 @@ issueSchema.methods.toSafeJSON = function toSafeJSON() {
     dueDate: this.dueDate,
     epic: this.epic,
     milestoneId: this.milestoneId ? this.milestoneId.toString() : null,
+    sprintId: this.sprintId ? this.sprintId.toString() : null,
+    backlogOrder: this.backlogOrder,
     labels: this.labels,
     subtasks: this.subtasks,
     comments: this.comments,

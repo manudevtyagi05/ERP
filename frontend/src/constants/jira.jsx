@@ -92,6 +92,21 @@ export const ISSUE_PRIORITIES = {
   },
 };
 
+export const SPRINT_STATUSES = {
+  PLANNING: {
+    label: 'Planning',
+    color: 'default',
+  },
+  ACTIVE: {
+    label: 'Active',
+    color: 'processing',
+  },
+  COMPLETED: {
+    label: 'Completed',
+    color: 'success',
+  },
+};
+
 export const KANBAN_COLUMNS = [
   { id: 'BACKLOG', title: 'Backlog', color: '#94a3b8' },
   { id: 'TODO', title: 'To Do', color: '#60a5fa' },

@@ -54,3 +54,8 @@ export async function toggleSubtask(id, subtaskId) {
   const { data } = await apiClient.patch(`/issues/${id}/subtasks/${subtaskId}/toggle`);
   return data.data;
 }
+
+export async function reorderIssues(sprintId, orderedIds) {
+  const { data } = await apiClient.patch('/issues/reorder', { sprintId, orderedIds });
+  return data.data;
+}
