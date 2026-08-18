@@ -2,27 +2,25 @@ import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select, InputNumber, DatePicker, App } from 'antd';
 import { useProject } from '../../context/ProjectContext';
 import { ISSUE_TYPES, ISSUE_PRIORITIES } from '../../constants/jira';
-import { listMilestones } from '../../services/milestoneService';
 
 function CreateIssueModal() {
-  const { createIssueModalOpen, setCreateIssueModalOpen, projects, teamMembers, addIssue } = useProject();
+  const {
+    createIssueModalOpen,
+    setCreateIssueModalOpen,
+    projects,
+    teamMembers,
+    sprints,
+    epics,
+    releases,
+    components,
+    addIssue,
+  } = useProject();
+
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  const [milestones, setMilestones] = useState([]);
   const { message } = App.useApp();
 
   const selectedProjectKey = Form.useWatch('projectKey', form);
-
-  useEffect(() => {
-    const project = projects.find((p) => p.key === selectedProjectKey);
-    if (!project) {
-      setMilestones([]);
-      return;
-    }
-    listMilestones(project.id)
-      .then(setMilestones)
-      .catch(() => setMilestones([]));
-  }, [selectedProjectKey, projects]);
 
   const handleCancel = () => {
     form.resetFields();
@@ -35,6 +33,8 @@ function CreateIssueModal() {
       const newIssue = await addIssue({
         ...values,
         dueDate: values.dueDate ? values.dueDate.format('YYYY-MM-DD') : undefined,
+        sprintId: values.sprintId === 'BACKLOG' ? null : values.sprintId,
+        epicId: values.epicId === 'NONE' ? null : values.epicId,
       });
       message.success(`Issue ${newIssue.key} created successfully`);
       form.resetFields();
@@ -54,7 +54,7 @@ function CreateIssueModal() {
       onOk={() => form.submit()}
       okText="Create"
       confirmLoading={submitting}
-      width={580}
+      width={640}
       destroyOnHidden
     >
       <div className="max-h-[calc(100vh-160px)] overflow-y-auto pr-1">
@@ -63,11 +63,13 @@ function CreateIssueModal() {
           layout="vertical"
           onFinish={handleFinish}
           initialValues={{
-            projectKey: projects[0]?.key || 'CORE',
+            projectKey: projects[0]?.key || 'WEB',
             type: 'Task',
             priority: 'MEDIUM',
             assigneeId: teamMembers[0]?.id,
             storyPoints: 3,
+            originalEstimate: 8,
+            sprintId: 'BACKLOG',
           }}
           className="mt-2"
           requiredMark={false}
@@ -75,7 +77,7 @@ function CreateIssueModal() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item
               name="projectKey"
-              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Project</span>}
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Project</span>}
               rules={[{ required: true, message: 'Please select a project' }]}
             >
               <Select
@@ -95,16 +97,16 @@ function CreateIssueModal() {
 
             <Form.Item
               name="type"
-              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Issue Type</span>}
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Issue Type</span>}
               rules={[{ required: true }]}
             >
               <Select
-                options={Object.keys(ISSUE_TYPES).map((key) => ({
-                  value: key,
+                options={Object.keys(ISSUE_TYPES).map((k) => ({
+                  value: k,
                   label: (
                     <div className="flex items-center gap-2">
-                      {ISSUE_TYPES[key].icon}
-                      <span>{ISSUE_TYPES[key].label}</span>
+                      {ISSUE_TYPES[k].icon}
+                      <span>{ISSUE_TYPES[k].label}</span>
                     </div>
                   ),
                 }))}
@@ -114,52 +116,60 @@ function CreateIssueModal() {
 
           <Form.Item
             name="title"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Summary</span>}
-            rules={[{ required: true, message: 'Please enter issue summary' }]}
+            label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Summary</span>}
+            rules={[{ required: true, message: 'Issue summary is required' }]}
           >
-            <Input placeholder="Short summary of the task, feature, or bug" />
+            <Input placeholder="e.g. Implement user login session invalidation" className="text-xs" />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Description</span>}
+            label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Description (Markdown supported)</span>}
           >
-            <Input.TextArea
-              rows={3}
-              placeholder="Add any context, acceptance criteria, or reproduction steps..."
-            />
+            <Input.TextArea rows={4} placeholder="Describe the feature or reproduction steps..." className="text-xs" />
           </Form.Item>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item
-              name="priority"
-              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Priority</span>}
-              rules={[{ required: true }]}
+              name="sprintId"
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Sprint</span>}
             >
               <Select
-                options={Object.keys(ISSUE_PRIORITIES).map((key) => ({
-                  value: key,
-                  label: (
-                    <div className="flex items-center gap-1.5">
-                      {ISSUE_PRIORITIES[key].icon}
-                      <span>{ISSUE_PRIORITIES[key].label}</span>
-                    </div>
-                  ),
-                }))}
+                options={[
+                  { value: 'BACKLOG', label: 'Backlog (No Sprint)' },
+                  ...sprints.map((s) => ({ value: s.id, label: s.name })),
+                ]}
               />
             </Form.Item>
 
             <Form.Item
-              name="assigneeId"
-              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Assignee</span>}
+              name="epicId"
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Epic</span>}
+            >
+              <Select
+                allowClear
+                placeholder="Select Epic"
+                options={[
+                  { value: 'NONE', label: 'None' },
+                  ...epics.map((e) => ({ value: e.id, label: e.name })),
+                ]}
+              />
+            </Form.Item>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <Form.Item
+              name="priority"
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Priority</span>}
               rules={[{ required: true }]}
             >
               <Select
-                options={teamMembers.map((m) => ({
-                  value: m.id,
+                options={Object.keys(ISSUE_PRIORITIES).map((k) => ({
+                  value: k,
                   label: (
-                    <div className="flex items-center gap-1.5 truncate">
-                      <span>{m.name}</span>
+                    <div className="flex items-center gap-1.5">
+                      {ISSUE_PRIORITIES[k].icon}
+                      <span>{ISSUE_PRIORITIES[k].label}</span>
                     </div>
                   ),
                 }))}
@@ -168,29 +178,46 @@ function CreateIssueModal() {
 
             <Form.Item
               name="storyPoints"
-              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Story Points</span>}
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Story Points</span>}
             >
-              <InputNumber min={1} max={21} style={{ width: '100%' }} />
+              <InputNumber min={0} max={100} className="w-full text-xs" />
+            </Form.Item>
+
+            <Form.Item
+              name="originalEstimate"
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Estimate (Hours)</span>}
+            >
+              <InputNumber min={0} step={1} className="w-full text-xs" />
             </Form.Item>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Form.Item
-              name="dueDate"
-              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Due Date</span>}
-            >
-              <DatePicker style={{ width: '100%' }} />
-            </Form.Item>
-
-            <Form.Item
-              name="milestoneId"
-              label={<span className="text-xs font-medium text-slate-600 dark:text-slate-300">Milestone</span>}
+              name="assigneeId"
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Assignee</span>}
             >
               <Select
                 allowClear
-                placeholder="No milestone"
-                options={milestones.map((m) => ({ value: m.id, label: m.name }))}
+                placeholder="Unassigned"
+                options={teamMembers.map((m) => ({
+                  value: m.id,
+                  label: (
+                    <div className="flex items-center gap-2">
+                      <span className="w-4 h-4 rounded-full bg-blue-500 text-[10px] text-white flex items-center justify-center font-bold">
+                        {m.name?.[0]}
+                      </span>
+                      <span>{m.name}</span>
+                    </div>
+                  ),
+                }))}
               />
+            </Form.Item>
+
+            <Form.Item
+              name="dueDate"
+              label={<span className="text-xs font-semibold text-slate-600 dark:text-slate-300">Due Date</span>}
+            >
+              <DatePicker className="w-full text-xs" format="YYYY-MM-DD" />
             </Form.Item>
           </div>
         </Form>

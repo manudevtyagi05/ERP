@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Layout,
   Menu,
@@ -7,17 +7,19 @@ import {
   Badge,
   Button,
   Input,
-  Breadcrumb,
-  Tag,
   Drawer,
+  Tag,
+  Tooltip,
   App,
 } from 'antd';
 import {
   DashboardOutlined,
   ProjectOutlined,
-  CheckSquareOutlined,
-  BugOutlined,
   AppstoreOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  MenuOutlined,
+  ThunderboltFilled,
   TeamOutlined,
   BarChartOutlined,
   CalendarOutlined,
@@ -26,13 +28,12 @@ import {
   UserOutlined,
   LogoutOutlined,
   SearchOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  MenuOutlined,
-  ThunderboltFilled,
-  SunOutlined,
-  MoonOutlined,
-  CloseOutlined,
+  BranchesOutlined,
+  RocketOutlined,
+  FilterOutlined,
+  QuestionCircleOutlined,
+  SafetyCertificateOutlined,
+  CheckSquareOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -41,20 +42,20 @@ import { useTheme } from '../context/ThemeContext';
 import ThemeToggle from '../components/common/ThemeToggle';
 import CreateIssueModal from '../components/issues/CreateIssueModal';
 import IssueDetailDrawer from '../components/issues/IssueDetailDrawer';
-import { listMilestones } from '../services/milestoneService';
-import { PERMISSIONS } from '../constants/permissions';
+import KeyboardShortcutsModal from '../components/common/KeyboardShortcutsModal';
 
 const { Header, Sider, Content } = Layout;
 
 function MainLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [mobileSearchVisible, setMobileSearchVisible] = useState(false);
-  const [upcomingMilestone, setUpcomingMilestone] = useState(null);
+  const [shortcutsModalOpen, setShortcutsModalOpen] = useState(false);
+  const searchInputRef = useRef(null);
+
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout, hasPermission } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
+  const { isDark } = useTheme();
   const {
     projects,
     activeProjectKey,
@@ -63,8 +64,7 @@ function MainLayout() {
     notifications,
     searchQuery,
     setSearchQuery,
-    setSelectedIssueId,
-    issues,
+    setCreateIssueModalOpen,
   } = useProject();
   const { message } = App.useApp();
 
@@ -76,28 +76,62 @@ function MainLayout() {
 
   const unreadCount = notifications.filter((n) => n.unread).length;
 
-  useEffect(() => {
-    if (!activeProject) {
-      setUpcomingMilestone(null);
-      return;
-    }
-    listMilestones(activeProject.id)
-      .then((milestones) => {
-        const upcoming = milestones
-          .filter((m) => m.status !== 'COMPLETED' && m.dueDate)
-          .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))[0];
-        setUpcomingMilestone(upcoming || null);
-      })
-      .catch(() => setUpcomingMilestone(null));
-  }, [activeProject]);
-
   // Close mobile drawer on route change
   useEffect(() => {
     setMobileDrawerOpen(false);
-    setMobileSearchVisible(false);
-  }, [location.pathname, location.search]);
+  }, [location.pathname]);
 
-  // Navigation Items shared between Desktop Sider and Mobile Drawer
+  // Global Keyboard Shortcuts
+  useEffect(() => {
+    let lastKey = '';
+    const handleKeyDown = (e) => {
+      const targetTag = e.target.tagName.toLowerCase();
+      if (targetTag === 'input' || targetTag === 'textarea' || e.target.isContentEditable) {
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+
+      if (key === 'c') {
+        e.preventDefault();
+        setCreateIssueModalOpen(true);
+      } else if (key === '/') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (key === '?') {
+        e.preventDefault();
+        setShortcutsModalOpen(true);
+      } else if (lastKey === 'g') {
+        if (key === 'b') {
+          e.preventDefault();
+          navigate('/board');
+        } else if (key === 'k') {
+          e.preventDefault();
+          navigate('/backlog');
+        } else if (key === 'r') {
+          e.preventDefault();
+          navigate('/roadmap');
+        } else if (key === 'd') {
+          e.preventDefault();
+          navigate('/');
+        } else if (key === 'p') {
+          e.preventDefault();
+          navigate('/projects');
+        } else if (key === 'f') {
+          e.preventDefault();
+          navigate('/filters');
+        }
+        lastKey = '';
+      } else {
+        lastKey = key;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [navigate, setCreateIssueModalOpen]);
+
+  // Sidebar Menu Items
   const sidebarMenuItems = [
     {
       key: '/',
@@ -107,436 +141,319 @@ function MainLayout() {
     {
       key: '/board',
       icon: <AppstoreOutlined style={{ fontSize: 16 }} />,
-      label: 'Board',
+      label: 'Active Board',
     },
     {
-      key: 'projects-group',
+      key: '/backlog',
+      icon: <BranchesOutlined style={{ fontSize: 16 }} />,
+      label: 'Backlog & Sprints',
+    },
+    {
+      key: '/roadmap',
+      icon: <CalendarOutlined style={{ fontSize: 16 }} />,
+      label: 'Roadmap',
+    },
+    {
+      key: '/issues',
+      icon: <CheckSquareOutlined style={{ fontSize: 16 }} />,
+      label: 'All Issues',
+    },
+    {
+      key: '/projects',
       icon: <ProjectOutlined style={{ fontSize: 16 }} />,
       label: 'Projects',
-      children: [
-        { key: '/projects', label: 'All Projects' },
-        { key: '/projects?filter=my', label: 'My Projects' },
-        { key: '/projects?filter=recent', label: 'Recent Projects' },
-      ],
     },
     {
-      key: 'work-group',
-      icon: <CheckSquareOutlined style={{ fontSize: 16 }} />,
-      label: 'Work',
-      children: [
-        { key: '/work/my-tasks', label: 'My Tasks' },
-        { key: '/work/assigned', label: 'Assigned to Me' },
-        { key: '/work/created', label: 'Created by Me' },
-      ],
+      key: '/releases',
+      icon: <RocketOutlined style={{ fontSize: 16 }} />,
+      label: 'Releases',
     },
     {
-      key: 'issues-group',
-      icon: <BugOutlined style={{ fontSize: 16 }} />,
-      label: 'Issues',
-      children: [
-        { key: '/issues', label: 'All Issues' },
-        { key: '/issues?status=OPEN', label: 'Open' },
-        { key: '/issues?status=IN_PROGRESS', label: 'In Progress' },
-        { key: '/issues?status=DONE', label: 'Completed' },
-      ],
-    },
-    {
-      type: 'divider',
-      style: { margin: '8px 12px', borderColor: isDark ? '#1e293b' : '#f1f5f9' },
-    },
-    hasPermission(PERMISSIONS.USER_READ) && {
-      key: '/teams',
-      icon: <TeamOutlined style={{ fontSize: 16 }} />,
-      label: 'Teams',
+      key: '/components',
+      icon: <AppstoreOutlined style={{ fontSize: 16 }} />,
+      label: 'Components',
     },
     {
       key: '/reports',
       icon: <BarChartOutlined style={{ fontSize: 16 }} />,
-      label: 'Reports',
+      label: 'Reports & Velocity',
     },
     {
-      key: '/calendar',
-      icon: <CalendarOutlined style={{ fontSize: 16 }} />,
-      label: 'Calendar',
+      key: '/filters',
+      icon: <FilterOutlined style={{ fontSize: 16 }} />,
+      label: 'JQL & Filters',
     },
     {
-      key: '/notifications',
-      icon: (
-        <Badge count={unreadCount} size="small" offset={[4, -2]} color="#2563eb">
-          <BellOutlined style={{ fontSize: 16 }} />
-        </Badge>
-      ),
-      label: 'Notifications',
+      key: '/automation',
+      icon: <ThunderboltFilled style={{ fontSize: 16 }} className="text-amber-500" />,
+      label: 'Automation Rules',
     },
+    {
+      key: '/teams',
+      icon: <TeamOutlined style={{ fontSize: 16 }} />,
+      label: 'Teams',
+    },
+    ...(user?.role === 'ADMIN'
+      ? [
+          {
+            key: '/admin',
+            icon: <SafetyCertificateOutlined style={{ fontSize: 16 }} />,
+            label: 'Admin Console',
+          },
+        ]
+      : []),
     {
       key: '/settings',
       icon: <SettingOutlined style={{ fontSize: 16 }} />,
       label: 'Settings',
     },
-  ].filter(Boolean);
+  ];
 
-  // User Profile Dropdown
+  // User menu items
   const userMenuItems = [
     {
-      key: 'user-header',
+      key: 'profile',
       label: (
-        <div className="py-1 px-1">
-          <div className="font-semibold text-slate-800 dark:text-slate-100 text-sm">
-            {[user?.firstName, user?.lastName].filter(Boolean).join(' ')}
+        <div className="py-1.5 px-1">
+          <div className="font-bold text-xs text-slate-800 dark:text-slate-100">
+            {user?.firstName} {user?.lastName}
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">{user?.email}</div>
-          <div className="mt-1">
-            <Tag color="blue" className="text-[11px] font-normal !mr-0">
-              {user?.role}
-            </Tag>
-          </div>
+          <div className="text-[11px] text-slate-500">{user?.email}</div>
+          <Tag color="blue" className="text-[10px] font-bold mt-1">
+            {user?.role}
+          </Tag>
         </div>
       ),
-      disabled: true,
     },
     { type: 'divider' },
     {
-      key: 'theme-toggle',
-      icon: isDark ? <SunOutlined className="text-amber-500" /> : <MoonOutlined className="text-indigo-400" />,
-      label: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
-      onClick: toggleTheme,
-    },
-    {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: 'Personal Settings',
+      label: 'User Settings',
       onClick: () => navigate('/settings'),
     },
     {
+      key: 'shortcuts',
+      icon: <QuestionCircleOutlined />,
+      label: 'Keyboard Shortcuts (?)',
+      onClick: () => setShortcutsModalOpen(true),
+    },
+    { type: 'divider' },
+    {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Log out',
       danger: true,
+      label: 'Sign Out',
       onClick: handleLogout,
     },
   ];
 
-  // Project Switcher Dropdown
-  const projectMenuItems = [
-    {
-      key: 'ALL',
-      label: (
-        <div className="flex items-center justify-between gap-4 py-1">
-          <span className="font-medium text-slate-800 dark:text-slate-200">All Workspaces</span>
-          {activeProjectKey === 'ALL' && <span className="text-blue-500 text-xs font-semibold">Active</span>}
-        </div>
-      ),
-      onClick: () => setActiveProjectKey('ALL'),
-    },
-    { type: 'divider' },
-    ...projects.map((p) => ({
-      key: p.key,
-      label: (
-        <div className="flex items-center justify-between gap-4 py-1">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-              {p.key}
-            </span>
-            <span className="text-slate-800 dark:text-slate-200 text-xs font-medium">{p.name}</span>
-          </div>
-          {activeProjectKey === p.key && <span className="text-blue-500 text-xs font-semibold">Active</span>}
-        </div>
-      ),
-      onClick: () => setActiveProjectKey(p.key),
-    })),
-  ];
-
-  // Dynamic breadcrumb paths
-  const getBreadcrumbs = () => {
-    const currentPath = location.pathname;
-    const items = [{ title: 'Home', href: '/' }];
-
-    if (activeProject) {
-      items.push({ title: `${activeProject.name} (${activeProject.key})` });
-    }
-
-    if (currentPath === '/board') items.push({ title: 'Kanban Board' });
-    else if (currentPath.startsWith('/projects')) items.push({ title: 'Projects' });
-    else if (currentPath.startsWith('/work')) items.push({ title: 'Work Directory' });
-    else if (currentPath.startsWith('/issues')) items.push({ title: 'Issues Tracker' });
-    else if (currentPath === '/teams') items.push({ title: 'Team Directory' });
-    else if (currentPath === '/reports') items.push({ title: 'Reports & Velocity' });
-    else if (currentPath === '/calendar') items.push({ title: 'Milestones & Calendar' });
-    else if (currentPath === '/notifications') items.push({ title: 'Notifications' });
-    else if (currentPath === '/settings') items.push({ title: 'Account Settings' });
-
-    return items;
-  };
-
-  // Quick search results
-  const matchingIssues = searchQuery.trim()
-    ? issues.filter(
-        (i) =>
-          i.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          i.key.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : [];
-
-  /**
-   * Shared Navigation Content Component
-   * Used identically inside both the desktop/tablet Sider and the mobile Drawer
-   */
-  const renderNavContent = (isMobile = false) => (
-    <div className="h-full flex flex-col justify-between overflow-hidden bg-white dark:bg-[#0e1526]">
-      <div className="flex flex-col flex-1 min-h-0">
-        {/* Brand / Workspace Switcher */}
-        <div className="h-14 border-b border-slate-100 dark:border-slate-800 flex items-center px-4 justify-between flex-shrink-0">
-          <Dropdown menu={{ items: projectMenuItems }} trigger={['click']} placement="bottomLeft">
-            <div className="flex items-center gap-2.5 cursor-pointer overflow-hidden group min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-sm flex-shrink-0">
-                <ThunderboltFilled />
+  return (
+    <Layout className="h-screen w-screen overflow-hidden bg-[#f8fafc] dark:bg-[#090d16] flex flex-row" hasSider>
+      {/* Sider Navigation (Desktop - Fixed in place) */}
+      <Sider
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        width={256}
+        collapsedWidth={68}
+        className="hidden md:flex flex-col h-screen flex-shrink-0 z-30 border-r border-slate-200 dark:border-slate-800 shadow-sm bg-white dark:bg-[#0e1526]"
+        theme={isDark ? 'dark' : 'light'}
+      >
+        {/* Brand Logo */}
+        <div className="h-14 flex-shrink-0 px-4 flex items-center justify-between border-b border-slate-200/80 dark:border-slate-800">
+          <div
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2.5 cursor-pointer min-w-0"
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-md flex-shrink-0">
+              <ThunderboltFilled />
+            </div>
+            {!collapsed && (
+              <div className="flex flex-col truncate">
+                <span className="font-extrabold text-sm text-slate-900 dark:text-slate-100 tracking-tight">
+                  Axiom Flow
+                </span>
+                <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                  Agile PM Suite
+                </span>
               </div>
-              {(!collapsed || isMobile) && (
-                <div className="truncate flex flex-col min-w-0">
-                  <span className="font-semibold text-slate-800 dark:text-slate-100 text-sm leading-tight truncate group-hover:text-blue-500 transition">
-                    {activeProject ? activeProject.name : 'Enterprise ERP'}
+            )}
+          </div>
+        </div>
+
+        {/* Project Switcher Pill in Sider */}
+        {!collapsed && projects.length > 0 && (
+          <div className="flex-shrink-0 px-3 py-2.5 border-b border-slate-100 dark:border-slate-800/80">
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              Active Project
+            </label>
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: 'ALL',
+                    label: 'All Projects (Global)',
+                    onClick: () => setActiveProjectKey('ALL'),
+                  },
+                  ...projects.map((p) => ({
+                    key: p.key,
+                    label: `${p.key} — ${p.name}`,
+                    onClick: () => setActiveProjectKey(p.key),
+                  })),
+                ],
+              }}
+              trigger={['click']}
+            >
+              <button
+                type="button"
+                className="w-full text-left p-2 rounded-lg border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/60 hover:border-blue-400 flex items-center justify-between transition group"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                    {activeProjectKey}
                   </span>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono truncate">
-                    {activeProject ? activeProject.key : 'Software Project'}
+                  <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
+                    {activeProject ? activeProject.name : 'All Projects'}
                   </span>
                 </div>
-              )}
-            </div>
-          </Dropdown>
-
-          {!isMobile && !collapsed && (
-            <Button
-              type="text"
-              size="small"
-              icon={<MenuFoldOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
-              onClick={() => setCollapsed(true)}
-              className="!w-7 !h-7 flex items-center justify-center !p-0 flex-shrink-0"
-            />
-          )}
-
-          {isMobile && (
-            <Button
-              type="text"
-              size="small"
-              icon={<CloseOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
-              onClick={() => setMobileDrawerOpen(false)}
-              className="!w-7 !h-7 flex items-center justify-center !p-0 flex-shrink-0"
-            />
-          )}
-        </div>
-
-        {/* Collapsed expand button for desktop/tablet */}
-        {!isMobile && collapsed && (
-          <div className="py-2 flex justify-center border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
-            <Button
-              type="text"
-              size="small"
-              icon={<MenuUnfoldOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
-              onClick={() => setCollapsed(false)}
-            />
+              </button>
+            </Dropdown>
           </div>
         )}
 
-        {/* Navigation Menu */}
-        <div className="py-2 flex-1 overflow-y-auto">
+        {/* Menu Items (Scrolls independently with visible scrollbar) */}
+        <div className="flex-1 min-h-0 overflow-y-auto py-2 pb-6 sidebar-scroll-container pr-0.5">
           <Menu
             mode="inline"
-            selectedKeys={[location.pathname + location.search, location.pathname]}
-            defaultOpenKeys={['projects-group', 'work-group', 'issues-group']}
+            selectedKeys={[location.pathname]}
             items={sidebarMenuItems}
-            onClick={({ key }) => {
-              if (key && !key.endsWith('-group')) {
-                navigate(key);
-                if (isMobile) {
-                  setMobileDrawerOpen(false);
-                }
-              }
-            }}
-            inlineIndent={16}
-            className="!border-none !bg-transparent"
+            onClick={({ key }) => navigate(key)}
+            className="!border-none font-semibold text-xs"
           />
         </div>
-      </div>
-
-      {/* Sidebar Footer: nearest upcoming milestone for active project */}
-      {(!collapsed || isMobile) && upcomingMilestone && (
-        <div className="p-3 mx-3 my-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
-          <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-300 mb-1 font-medium">
-            <span className="truncate">{upcomingMilestone.name}</span>
-            <span className="text-blue-600 dark:text-blue-400">{upcomingMilestone.progress}%</span>
-          </div>
-          <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-            <div className="bg-blue-600 dark:bg-blue-500 h-full rounded-full" style={{ width: `${upcomingMilestone.progress}%` }} />
-          </div>
-          {upcomingMilestone.dueDate && (
-            <div className="text-[11px] text-slate-400 dark:text-slate-500 mt-1">Due {upcomingMilestone.dueDate}</div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <Layout hasSider className="h-screen w-screen overflow-hidden bg-slate-50 dark:bg-[#090d16]">
-      {/* Desktop & Tablet Sider (hidden on mobile via CSS md:block) */}
-      <Sider
-        collapsible
-        collapsed={collapsed}
-        onCollapse={setCollapsed}
-        trigger={null}
-        width={250}
-        collapsedWidth={64}
-        className="jira-sidebar border-r border-slate-200/80 dark:border-slate-800 !bg-white dark:!bg-[#0e1526] h-screen select-none flex-shrink-0 hidden md:block"
-        style={{ zIndex: 50 }}
-      >
-        {renderNavContent(false)}
       </Sider>
 
       {/* Mobile Navigation Drawer */}
       <Drawer
         placement="left"
-        closable={false}
-        onClose={() => setMobileDrawerOpen(false)}
         open={mobileDrawerOpen}
-        styles={{ body: { padding: 0 } }}
-        width={280}
-        className="mobile-nav-drawer md:hidden"
+        onClose={() => setMobileDrawerOpen(false)}
+        width={260}
+        styles={{ body: { padding: 0, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' } }}
+        className="md:hidden"
       >
-        {renderNavContent(true)}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2.5 flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow">
+            <ThunderboltFilled />
+          </div>
+          <div>
+            <div className="font-bold text-sm text-slate-900 dark:text-slate-100">Axiom Flow</div>
+            <div className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">Agile Management</div>
+          </div>
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto py-2 pb-6 sidebar-scroll-container">
+          <Menu
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={sidebarMenuItems}
+            onClick={({ key }) => navigate(key)}
+            className="!border-none font-semibold text-xs py-2"
+          />
+        </div>
       </Drawer>
 
-      {/* Main Layout Container */}
-      <Layout className="h-screen flex flex-col min-w-0 overflow-hidden !bg-slate-50 dark:!bg-[#090d16]">
-        {/* Header Bar */}
-        <Header className="!bg-white dark:!bg-[#0e1526] border-b border-slate-200/80 dark:border-slate-800 px-3 sm:px-4 md:px-6 h-14 flex items-center justify-between flex-shrink-0 z-40 transition-colors">
-          {/* Left: Mobile menu toggle / Breadcrumbs */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            {/* Mobile Hamburger Button (visible only on mobile screens) */}
+      {/* Main Layout Area (Right Side - Header fixed, Content scrollable) */}
+      <Layout className="h-screen flex flex-col flex-1 overflow-hidden bg-transparent min-w-0">
+        {/* Top Header (Fixed at top of screen) */}
+        <Header className="h-14 flex-shrink-0 px-4 sticky top-0 z-20 bg-white/95 dark:bg-[#0e1526]/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-3">
+            {/* Mobile Hamburger Button (Only on mobile <768px) */}
             <div className="block md:hidden">
               <Button
                 type="text"
-                size="small"
-                icon={<MenuOutlined className="text-slate-600 dark:text-slate-300 text-base" />}
+                icon={<MenuOutlined />}
                 onClick={() => setMobileDrawerOpen(true)}
-                className="!w-8 !h-8 flex items-center justify-center !p-0 flex-shrink-0"
+                className="text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               />
             </div>
 
-            {/* Breadcrumbs (collapses on tiny mobile viewports) */}
-            <div className="min-w-0 truncate">
-              <Breadcrumb
-                className="truncate text-xs"
-                items={getBreadcrumbs().map((b) => ({
-                  title: <span className="text-xs text-slate-500 dark:text-slate-400">{b.title}</span>,
-                }))}
+            {/* Desktop Sider Collapse Toggle (Only on desktop >=768px) */}
+            <div className="hidden md:block">
+              <Button
+                type="text"
+                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                onClick={() => setCollapsed(!collapsed)}
+                className="text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              />
+            </div>
+
+            {/* Global Search Input with Shortcut hint */}
+            <div className="relative w-48 sm:w-64 md:w-80">
+              <Input
+                ref={searchInputRef}
+                placeholder="Search tickets, epics, JQL... (/)"
+                prefix={<SearchOutlined className="text-slate-400" />}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onPressEnter={() => navigate(`/filters?q=${encodeURIComponent(searchQuery)}`)}
+                allowClear
+                className="text-xs rounded-lg bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800"
               />
             </div>
           </div>
 
-          {/* Center / Right: Global Search & Quick Actions */}
-          <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-            {/* Mobile search toggle button on small screens */}
-            <div className="sm:hidden">
+          {/* Right Header Actions */}
+          <div className="flex items-center gap-2">
+            <Tooltip title="Keyboard Shortcuts (?)">
               <Button
                 type="text"
-                size="small"
-                icon={<SearchOutlined className="text-slate-600 dark:text-slate-300 text-base" />}
-                onClick={() => setMobileSearchVisible((prev) => !prev)}
-                className="!w-8 !h-8 flex items-center justify-center !p-0"
+                icon={<QuestionCircleOutlined />}
+                onClick={() => setShortcutsModalOpen(true)}
+                className="hidden sm:flex text-slate-600 dark:text-slate-300"
               />
-            </div>
+            </Tooltip>
 
-            {/* Jira-style Global Search (visible on sm+ or toggled on mobile) */}
-            <div className={`relative ${mobileSearchVisible ? 'absolute left-2 right-2 top-14 bg-white dark:bg-slate-900 p-2 shadow-lg rounded-b-lg border border-slate-200 dark:border-slate-800 z-50 flex items-center' : 'hidden sm:block'}`}>
-              <Input
-                placeholder="Search issues (e.g. CORE-104)..."
-                prefix={<SearchOutlined className="text-slate-400" />}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                allowClear
-                className="w-full sm:w-44 md:w-60 lg:w-72 text-xs bg-slate-50 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 rounded-md focus:bg-white dark:focus:bg-slate-800 dark:text-slate-100 transition"
-                autoFocus={mobileSearchVisible}
-              />
+            <Tooltip title="Notifications">
+              <Badge count={unreadCount} size="small" offset={[-2, 4]}>
+                <Button
+                  type="text"
+                  icon={<BellOutlined />}
+                  onClick={() => navigate('/notifications')}
+                  className="text-slate-600 dark:text-slate-300"
+                />
+              </Badge>
+            </Tooltip>
 
-              {/* Quick Search Dropdown Result Panel */}
-              {searchQuery.trim() && (
-                <div className="absolute right-0 top-full mt-1.5 w-72 sm:w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg shadow-lg p-2 z-50">
-                  <div className="text-[11px] font-semibold text-slate-400 dark:text-slate-400 px-2 py-1 uppercase tracking-wider">
-                    Matching Issues ({matchingIssues.length})
-                  </div>
-                  {matchingIssues.length === 0 ? (
-                    <div className="text-xs text-slate-400 py-3 text-center">No issues found</div>
-                  ) : (
-                    <div className="max-h-60 overflow-y-auto flex flex-col gap-1">
-                      {matchingIssues.map((issue) => (
-                        <div
-                          key={issue.id}
-                          onClick={() => {
-                            setSelectedIssueId(issue.id);
-                            setSearchQuery('');
-                            setMobileSearchVisible(false);
-                          }}
-                          className="flex items-center justify-between p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer text-xs transition"
-                        >
-                          <div className="flex items-center gap-2 truncate">
-                            <span className="font-mono text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-                              {issue.key}
-                            </span>
-                            <span className="truncate text-slate-700 dark:text-slate-200">{issue.title}</span>
-                          </div>
-                          <Tag className="!mr-0 text-[10px] scale-90">{issue.status}</Tag>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Theme Toggle Button */}
             <ThemeToggle />
 
-            {/* Notifications Button */}
-            <Button
-              type="text"
-              icon={
-                <Badge count={unreadCount} size="small" offset={[2, -2]} color="#2563eb">
-                  <BellOutlined className="text-slate-600 dark:text-slate-300 text-base" />
-                </Badge>
-              }
-              onClick={() => navigate('/notifications')}
-              className="!w-8 sm:!w-9 !h-8 sm:!h-9 flex items-center justify-center rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
-            />
-
-            {/* User Profile */}
+            {/* User Dropdown */}
             <Dropdown menu={{ items: userMenuItems }} trigger={['click']} placement="bottomRight">
-              <div className="flex items-center gap-2 cursor-pointer pl-0.5 hover:opacity-85 transition flex-shrink-0">
-                <Avatar
-                  icon={<UserOutlined />}
-                  size={28}
-                  className="border border-slate-200 dark:border-slate-700 bg-slate-200 dark:bg-slate-700"
-                />
-                <span className="hidden lg:inline text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[120px]">
-                  {[user?.firstName, user?.lastName].filter(Boolean).join(' ')}
-                </span>
-              </div>
+              <button
+                type="button"
+                className="flex items-center gap-2 p-0.5 rounded-full hover:ring-2 hover:ring-blue-400 transition"
+              >
+                <Avatar size={30} className="bg-blue-600 text-xs font-bold shadow-sm">
+                  {user?.firstName?.[0] || 'U'}
+                </Avatar>
+              </button>
             </Dropdown>
           </div>
         </Header>
 
-        {/* Content Body with Responsive Padding & Min-Width Constraint */}
-        <Content className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 min-h-0">
-          <div className="max-w-7xl w-full mx-auto min-w-0">
-            <Outlet />
-          </div>
+        {/* Content Body (Independent smooth scrollable area) */}
+        <Content className="flex-1 overflow-y-auto p-4 md:p-6 w-full">
+          <Outlet />
         </Content>
       </Layout>
 
-      {/* Global Create Issue Modal */}
+      {/* Global Modals & Drawers */}
       <CreateIssueModal />
-
-      {/* Global Issue Details Drawer */}
       <IssueDetailDrawer />
+      <KeyboardShortcutsModal
+        open={shortcutsModalOpen}
+        onClose={() => setShortcutsModalOpen(false)}
+      />
     </Layout>
   );
 }

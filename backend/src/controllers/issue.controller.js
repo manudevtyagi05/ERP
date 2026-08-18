@@ -50,10 +50,53 @@ const addComment = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, { message: 'Comment added', data });
 });
 
+const addReaction = asyncHandler(async (req, res) => {
+  const { commentId, emoji } = req.body;
+  const data = await issueService.addReaction(req.company._id, req.params.id, commentId, emoji, req.user);
+  return ApiResponse.success(res, { message: 'Reaction updated', data });
+});
+
+const logWork = asyncHandler(async (req, res) => {
+  const data = await issueService.logWork(req.company._id, req.params.id, req.body, req.user);
+  return ApiResponse.success(res, { message: 'Work logged', data });
+});
+
+const linkIssue = asyncHandler(async (req, res) => {
+  const data = await issueService.linkIssue(req.company._id, req.params.id, req.body, req.user);
+  return ApiResponse.success(res, { message: 'Issue linked', data });
+});
+
+const deleteLink = asyncHandler(async (req, res) => {
+  const { linkId } = req.params;
+  const data = await issueService.deleteLink(req.company._id, req.params.id, linkId);
+  return ApiResponse.success(res, { message: 'Link deleted', data });
+});
+
+const toggleWatcher = asyncHandler(async (req, res) => {
+  const data = await issueService.toggleWatcher(req.company._id, req.params.id, req.user);
+  return ApiResponse.success(res, { message: 'Watcher toggled', data });
+});
+
+const toggleVote = asyncHandler(async (req, res) => {
+  const data = await issueService.toggleVote(req.company._id, req.params.id, req.user);
+  return ApiResponse.success(res, { message: 'Vote toggled', data });
+});
+
+const addSubtask = asyncHandler(async (req, res) => {
+  const data = await issueService.addSubtask(req.company._id, req.params.id, req.body, req.user);
+  return ApiResponse.success(res, { message: 'Subtask added', data });
+});
+
 const toggleSubtask = asyncHandler(async (req, res) => {
   const { subtaskId } = req.params;
   const data = await issueService.toggleSubtask(req.company._id, req.params.id, subtaskId);
   return ApiResponse.success(res, { message: 'Subtask toggled', data });
+});
+
+const deleteSubtask = asyncHandler(async (req, res) => {
+  const { subtaskId } = req.params;
+  const data = await issueService.deleteSubtask(req.company._id, req.params.id, subtaskId);
+  return ApiResponse.success(res, { message: 'Subtask deleted', data });
 });
 
 const getActivity = asyncHandler(async (req, res) => {
@@ -71,6 +114,14 @@ module.exports = {
   moveIssueStatus,
   deleteIssue,
   addComment,
+  addReaction,
+  logWork,
+  linkIssue,
+  deleteLink,
+  toggleWatcher,
+  toggleVote,
+  addSubtask,
   toggleSubtask,
+  deleteSubtask,
   getActivity,
 };

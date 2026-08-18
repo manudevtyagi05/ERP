@@ -3,6 +3,7 @@ const User = require('../models/User.model');
 const Company = require('../models/Company.model');
 const ApiError = require('../utils/ApiError');
 const { permissionsForRole } = require('../policies/permissions');
+const { ROLES } = require('../constants/roles');
 
 function signToken(user) {
   return jwt.sign(
@@ -10,6 +11,47 @@ function signToken(user) {
     process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRES_IN || '1d' }
   );
+}
+
+async function register({ companyName, firstName, lastName, email, password }) {
+  const normalizedEmail = email.toLowerCase().trim();
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    throw new ApiError(400, 'A user with this email already exists');
+  }
+
+  const rawCode = (companyName || 'WORKSPACE').replace(/[^a-zA-Z0-9]/g, '').slice(0, 6).toUpperCase();
+  const code = rawCode || 'WS' + Math.floor(1000 + Math.random() * 9000);
+
+  let company = await Company.findOne({ code });
+  if (!company) {
+    company = await Company.create({
+      name: companyName || 'My Workspace',
+      code: code,
+      slug: (companyName || 'workspace').toLowerCase().replace(/[^a-z0-9]/g, '-'),
+      email: normalizedEmail,
+      status: 'ACTIVE',
+      isActive: true,
+    });
+  }
+
+  const user = await User.create({
+    companyId: company._id,
+    firstName: firstName || 'Admin',
+    lastName: lastName || 'User',
+    email: normalizedEmail,
+    password,
+    role: ROLES.ADMIN,
+    department: 'Executive',
+    isActive: true,
+  });
+
+  const token = signToken(user);
+  return {
+    user: { ...user.toSafeJSON(), permissions: permissionsForRole(user.role) },
+    company: company.toSafeJSON(),
+    token,
+  };
 }
 
 async function login({ email, password }) {
@@ -111,6 +153,7 @@ async function updateProfile(userId, { firstName, lastName, department }) {
 }
 
 module.exports = {
+  register,
   login,
   getCurrentUser,
   changePassword,

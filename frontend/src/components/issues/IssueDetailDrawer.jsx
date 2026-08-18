@@ -1,502 +1,699 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Drawer,
   Tag,
-  Select,
   Avatar,
+  Select,
   Button,
   Input,
-  Checkbox,
+  Progress,
+  Tooltip,
+  Dropdown,
+  Tabs,
   Space,
-  Divider,
-  Popconfirm,
   App,
 } from 'antd';
 import {
   CloseOutlined,
-  DeleteOutlined,
-  SendOutlined,
-  CalendarOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
   UserOutlined,
   PlusOutlined,
+  DeleteOutlined,
+  LinkOutlined,
+  EyeOutlined,
+  EyeFilled,
+  LikeOutlined,
+  LikeFilled,
+  BranchesOutlined,
+  FieldTimeOutlined,
+  SendOutlined,
+  ThunderboltFilled,
+  SmileOutlined,
+  RocketOutlined,
 } from '@ant-design/icons';
 import { useProject } from '../../context/ProjectContext';
-import { useTheme } from '../../context/ThemeContext';
-import { ISSUE_TYPES, ISSUE_STATUSES, ISSUE_PRIORITIES } from '../../constants/jira';
-import { listMilestones } from '../../services/milestoneService';
+import { useAuth } from '../../context/AuthContext';
+import { ISSUE_TYPES, ISSUE_PRIORITIES, ISSUE_STATUSES } from '../../constants/jira';
+import LogWorkModal from './LogWorkModal';
+import LinkIssueModal from './LinkIssueModal';
+
+const EMOJIS = ['👍', '❤️', '🚀', '👀', '🎉'];
 
 function IssueDetailDrawer() {
   const {
     selectedIssueId,
+    setSelectedIssueId,
     selectedIssue,
     selectedIssueLoading,
-    setSelectedIssueId,
-    updateIssue,
-    reassignIssue,
-    deleteIssue,
-    moveIssueStatus,
-    addComment,
-    toggleSubtask,
+    issues,
+    projects,
+    sprints,
+    epics,
+    releases,
+    components,
     teamMembers,
+    moveIssueStatus,
+    assignIssueAction,
+    deleteIssueAction,
+    addCommentAction,
+    addReactionAction,
+    logWorkAction,
+    linkIssueAction,
+    deleteLinkAction,
+    toggleWatcherAction,
+    toggleVoteAction,
+    addSubtaskAction,
+    toggleSubtaskAction,
+    deleteSubtaskAction,
+    editIssue,
   } = useProject();
-  const { isDark } = useTheme();
 
+  const { user } = useAuth();
   const [commentText, setCommentText] = useState('');
   const [newSubtaskTitle, setNewSubtaskTitle] = useState('');
-  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
-  const [milestones, setMilestones] = useState([]);
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState('');
+  const [editingDesc, setEditingDesc] = useState(false);
+  const [descValue, setDescValue] = useState('');
+  const [logWorkOpen, setLogWorkOpen] = useState(false);
+  const [linkIssueOpen, setLinkIssueOpen] = useState(false);
   const { message } = App.useApp();
 
   useEffect(() => {
-    if (!selectedIssue?.projectId) {
-      setMilestones([]);
-      return;
+    if (selectedIssue) {
+      setTitleValue(selectedIssue.title || '');
+      setDescValue(selectedIssue.description || '');
+      setEditingTitle(false);
+      setEditingDesc(false);
     }
-    listMilestones(selectedIssue.projectId)
-      .then(setMilestones)
-      .catch(() => setMilestones([]));
-  }, [selectedIssue?.projectId]);
+  }, [selectedIssue]);
 
   if (!selectedIssueId) return null;
 
-  if (!selectedIssue) {
-    return (
-      <Drawer
-        placement="right"
-        width="min(680px, 100vw)"
-        onClose={() => setSelectedIssueId(null)}
-        open={Boolean(selectedIssueId)}
-        closeIcon={<CloseOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
-      >
-        <div className="text-sm text-slate-400 dark:text-slate-500 text-center py-10">
-          {selectedIssueLoading ? 'Loading issue…' : 'Unable to load this issue.'}
-        </div>
-      </Drawer>
-    );
-  }
+  const issue = selectedIssue;
+  const typeConfig = issue ? ISSUE_TYPES[issue.type] || ISSUE_TYPES.Task : ISSUE_TYPES.Task;
+  const priorityConfig = issue ? ISSUE_PRIORITIES[issue.priority] || ISSUE_PRIORITIES.MEDIUM : ISSUE_PRIORITIES.MEDIUM;
+  const statusConfig = issue ? ISSUE_STATUSES[issue.status] || ISSUE_STATUSES.TODO : ISSUE_STATUSES.TODO;
 
-  const timeline = [
-    ...(selectedIssue.comments || []).map((c) => ({
-      kind: 'comment',
-      id: c.id,
-      createdAt: c.createdAt,
-      author: c.author,
-      content: c.content,
-    })),
-    ...(selectedIssue.activity || [])
-      .filter((a) => a.type !== 'COMMENT_ADDED')
-      .map((a) => ({ kind: 'activity', ...a })),
-  ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const subtasks = issue?.subtasks || [];
+  const completedSubtasksCount = subtasks.filter((s) => s.completed).length;
+  const subtasksProgress = subtasks.length > 0 ? Math.round((completedSubtasksCount / subtasks.length) * 100) : 0;
 
-  const handleClose = () => {
-    setSelectedIssueId(null);
-  };
+  const isWatching = (issue?.watchers || []).some((w) => w.id === user?.id);
+  const hasVoted = (issue?.votes || []).includes(user?.id);
 
-  const handleStatusChange = async (newStatus) => {
-    try {
-      await moveIssueStatus(selectedIssue.id, newStatus);
-      message.success(`Status changed to ${ISSUE_STATUSES[newStatus]?.label}`);
-    } catch {
-      message.error('Failed to change status');
-    }
-  };
-
-  const handlePriorityChange = async (newPriority) => {
-    try {
-      await updateIssue(selectedIssue.id, { priority: newPriority });
-      message.success(`Priority set to ${newPriority}`);
-    } catch {
-      message.error('Failed to update priority');
-    }
-  };
-
-  const handleAssigneeChange = async (assigneeId) => {
-    const assignee = teamMembers.find((m) => m.id === assigneeId);
-    try {
-      await reassignIssue(selectedIssue.id, assigneeId);
-      message.success(`Assigned to ${assignee?.name || 'selected member'}`);
-    } catch {
-      message.error('Failed to update assignee');
-    }
-  };
-
-  const handleMilestoneChange = async (milestoneId) => {
-    try {
-      await updateIssue(selectedIssue.id, { milestoneId: milestoneId || null });
-      message.success('Milestone updated');
-    } catch {
-      message.error('Failed to update milestone');
-    }
-  };
-
-  const handleAddComment = async () => {
+  // Comments handler
+  const handleAddComment = async (e) => {
+    e?.preventDefault();
     if (!commentText.trim()) return;
-    setCommentSubmitting(true);
     try {
-      await addComment(selectedIssue.id, commentText);
+      await addCommentAction(issue.id, commentText.trim());
       setCommentText('');
-      message.success('Comment added');
-    } catch {
-      message.error('Failed to add comment');
-    } finally {
-      setCommentSubmitting(false);
+      message.success('Comment posted');
+    } catch (err) {
+      message.error('Failed to post comment');
     }
   };
 
-  const handleAddSubtask = async () => {
+  const handleAddSubtask = async (e) => {
+    e?.preventDefault();
     if (!newSubtaskTitle.trim()) return;
-    const subtask = {
-      id: `sub-${Date.now()}`,
-      title: newSubtaskTitle.trim(),
-      completed: false,
-    };
     try {
-      await updateIssue(selectedIssue.id, {
-        subtasks: [...(selectedIssue.subtasks || []), subtask],
-      });
+      await addSubtaskAction(issue.id, { title: newSubtaskTitle.trim() });
       setNewSubtaskTitle('');
-      setIsAddingSubtask(false);
-      message.success('Subtask added');
-    } catch {
+    } catch (err) {
       message.error('Failed to add subtask');
     }
   };
 
-  const handleToggleSubtask = async (subtaskId) => {
+  const handleSaveTitle = async () => {
+    if (!titleValue.trim() || titleValue === issue.title) {
+      setEditingTitle(false);
+      return;
+    }
     try {
-      await toggleSubtask(selectedIssue.id, subtaskId);
-    } catch {
-      message.error('Failed to toggle subtask');
+      await editIssue(issue.id, { title: titleValue.trim() });
+      setEditingTitle(false);
+      message.success('Title updated');
+    } catch (err) {
+      message.error('Failed to update title');
     }
   };
 
-  const handleDelete = async () => {
+  const handleSaveDesc = async () => {
     try {
-      await deleteIssue(selectedIssue.id);
-      message.success(`Deleted issue ${selectedIssue.key}`);
-      handleClose();
-    } catch {
-      message.error('Failed to delete issue');
+      await editIssue(issue.id, { description: descValue });
+      setEditingDesc(false);
+      message.success('Description updated');
+    } catch (err) {
+      message.error('Failed to update description');
     }
   };
 
-  const issueTypeConfig = ISSUE_TYPES[selectedIssue.type] || ISSUE_TYPES.Task;
+  const handleDeleteIssue = async () => {
+    Modal.confirm({
+      title: `Delete issue ${issue.key}?`,
+      content: 'This action cannot be undone and will remove all work logs, comments, and links.',
+      okText: 'Delete',
+      okType: 'danger',
+      onOk: async () => {
+        await deleteIssueAction(issue.id);
+        message.success('Issue deleted');
+      },
+    });
+  };
 
   return (
     <Drawer
-      title={
-        <div className="flex items-center justify-between w-full pr-2 sm:pr-4 min-w-0">
-          <div className="flex items-center gap-2 min-w-0 truncate">
-            <span className="p-1 rounded bg-slate-100 dark:bg-slate-800 flex items-center flex-shrink-0">{issueTypeConfig.icon}</span>
-            <span className="font-mono font-semibold text-slate-700 dark:text-slate-200 text-sm flex-shrink-0">{selectedIssue.key}</span>
-            <Tag color={issueTypeConfig.color} className="!mr-0 truncate">
-              {issueTypeConfig.label}
-            </Tag>
-          </div>
-          <Space className="flex-shrink-0">
-            <Popconfirm
-              title="Delete this issue?"
-              description="This action cannot be undone."
-              onConfirm={handleDelete}
-              okText="Delete"
-              okButtonProps={{ danger: true }}
-            >
-              <Button type="text" danger size="small" icon={<DeleteOutlined />}>
-                Delete
-              </Button>
-            </Popconfirm>
-          </Space>
-        </div>
-      }
-      placement="right"
-      width="min(680px, 100vw)"
-      onClose={handleClose}
-      open={Boolean(selectedIssueId)}
-      closeIcon={<CloseOutlined className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200" />}
-      styles={{
-        body: { padding: '16px' },
-        header: {
-          borderBottom: isDark ? '1px solid #1e293b' : '1px solid #e2e8f0',
-          padding: '12px 16px',
-        },
-      }}
+      open={!!selectedIssueId}
+      onClose={() => setSelectedIssueId(null)}
+      width={window.innerWidth > 900 ? 820 : '95%'}
+      closable={false}
+      destroyOnClose
+      bodyStyle={{ padding: 0 }}
+      className="jira-drawer"
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 min-w-0">
-        {/* Main Content Column */}
-        <div className="md:col-span-2 flex flex-col gap-5">
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100 leading-snug">
-              {selectedIssue.title}
-            </h1>
-          </div>
-
-          {/* Description */}
-          <div>
-            <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-              Description
-            </h3>
-            <div className="text-sm text-slate-700 dark:text-slate-200 bg-slate-50/80 dark:bg-slate-800/60 p-3.5 rounded-md border border-slate-200/70 dark:border-slate-700/60 whitespace-pre-wrap leading-relaxed">
-              {selectedIssue.description || 'No description provided.'}
+      {selectedIssueLoading || !issue ? (
+        <div className="p-8 text-center text-xs text-slate-400">Loading issue details...</div>
+      ) : (
+        <div className="flex flex-col h-full bg-white dark:bg-[#0e1526] text-slate-800 dark:text-slate-100">
+          {/* Top Bar Navigation */}
+          <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">{typeConfig.icon}</span>
+              <span className="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">
+                {issue.key}
+              </span>
+              <Tag color={statusConfig.tagColor} className="text-[10px] font-bold uppercase !m-0">
+                {statusConfig.label}
+              </Tag>
             </div>
-          </div>
 
-          {/* Subtasks Checklist */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                Subtasks ({selectedIssue.subtasks?.filter((s) => s.completed).length || 0}/
-                {selectedIssue.subtasks?.length || 0})
-              </h3>
-              {!isAddingSubtask && (
+            <div className="flex items-center gap-1.5">
+              <Tooltip title={isWatching ? 'Stop watching' : 'Watch issue'}>
                 <Button
-                  type="text"
                   size="small"
-                  icon={<PlusOutlined />}
-                  onClick={() => setIsAddingSubtask(true)}
-                  className="text-xs text-blue-600 dark:text-blue-400"
+                  type="text"
+                  icon={isWatching ? <EyeFilled className="text-blue-500" /> : <EyeOutlined />}
+                  onClick={() => toggleWatcherAction(issue.id)}
+                  className="text-xs"
                 >
-                  Add Subtask
+                  {(issue.watchers || []).length}
                 </Button>
-              )}
-            </div>
+              </Tooltip>
 
-            <div className="flex flex-col gap-1.5 bg-white dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-700/80 rounded-md p-2">
-              {(!selectedIssue.subtasks || selectedIssue.subtasks.length === 0) && !isAddingSubtask && (
-                <p className="text-xs text-slate-400 dark:text-slate-500 py-2 text-center">No subtasks yet</p>
-              )}
-              {selectedIssue.subtasks?.map((subtask) => (
-                <div
-                  key={subtask.id}
-                  className="flex items-center justify-between p-1.5 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded text-xs text-slate-700 dark:text-slate-200 transition"
+              <Tooltip title={hasVoted ? 'Remove vote' : 'Vote for this issue'}>
+                <Button
+                  size="small"
+                  type="text"
+                  icon={hasVoted ? <LikeFilled className="text-blue-500" /> : <LikeOutlined />}
+                  onClick={() => toggleVoteAction(issue.id)}
+                  className="text-xs"
                 >
-                  <Checkbox
-                    checked={subtask.completed}
-                    onChange={() => handleToggleSubtask(subtask.id)}
-                  >
-                    <span className={subtask.completed ? 'line-through text-slate-400 dark:text-slate-500' : ''}>
-                      {subtask.title}
-                    </span>
-                  </Checkbox>
-                </div>
-              ))}
+                  {(issue.votes || []).length}
+                </Button>
+              </Tooltip>
 
-              {isAddingSubtask && (
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
-                  <Input
-                    size="small"
-                    placeholder="Subtask title..."
-                    value={newSubtaskTitle}
-                    onChange={(e) => setNewSubtaskTitle(e.target.value)}
-                    onPressEnter={handleAddSubtask}
-                    autoFocus
-                  />
-                  <Button size="small" type="primary" onClick={handleAddSubtask}>
-                    Save
-                  </Button>
-                  <Button size="small" onClick={() => setIsAddingSubtask(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              )}
+              <Button
+                size="small"
+                danger
+                type="text"
+                icon={<DeleteOutlined />}
+                onClick={handleDeleteIssue}
+              />
+
+              <Button
+                size="small"
+                type="text"
+                icon={<CloseOutlined />}
+                onClick={() => setSelectedIssueId(null)}
+              />
             </div>
           </div>
 
-          {/* Comments & Activity */}
-          <Divider className="!my-2 dark:border-slate-800" />
-          <div>
-            <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
-              Activity & Comments
-            </h3>
-
-            <div className="flex flex-col gap-2.5 mb-4">
-              {timeline.length === 0 && (
-                <div className="text-xs text-slate-400 dark:text-slate-500 text-center py-2">No activity yet.</div>
-              )}
-              {timeline.map((entry) =>
-                entry.kind === 'comment' ? (
-                  <div key={entry.id} className="flex items-start gap-2.5">
-                    <Avatar
-                      src={entry.author?.avatar}
-                      icon={<UserOutlined />}
-                      size="small"
-                      className="mt-0.5 bg-slate-200 dark:bg-slate-700"
+          {/* Main Drawer Body: Split Pane */}
+          <div className="flex-1 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-200 dark:divide-slate-800">
+            {/* Left 8 Cols: Content, Subtasks, Comments, Links */}
+            <div className="lg:col-span-8 p-5 flex flex-col gap-6">
+              {/* Issue Title (Editable) */}
+              <div>
+                {editingTitle ? (
+                  <div className="flex flex-col gap-1.5">
+                    <Input.TextArea
+                      value={titleValue}
+                      onChange={(e) => setTitleValue(e.target.value)}
+                      rows={2}
+                      autoFocus
+                      className="text-base font-bold"
                     />
-                    <div className="flex-1 bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 rounded-md p-2.5 text-xs">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-semibold text-slate-800 dark:text-slate-200">{entry.author?.name}</span>
-                        <span className="text-slate-400 dark:text-slate-500 text-[11px]">
-                          {entry.createdAt ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recently'}
-                        </span>
-                      </div>
-                      <p className="text-slate-700 dark:text-slate-300 leading-normal">{entry.content}</p>
+                    <div className="flex items-center gap-2">
+                      <Button size="small" type="primary" onClick={handleSaveTitle}>
+                        Save
+                      </Button>
+                      <Button size="small" onClick={() => setEditingTitle(false)}>
+                        Cancel
+                      </Button>
                     </div>
                   </div>
                 ) : (
-                  <div key={entry.id} className="flex items-center gap-2.5 pl-1 text-[11px] text-slate-500 dark:text-slate-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600 flex-shrink-0" />
-                    <span className="truncate">
-                      <span className="font-medium text-slate-600 dark:text-slate-300">{entry.actor?.name || 'Someone'}</span>{' '}
-                      {entry.message?.charAt(0).toLowerCase() + entry.message?.slice(1)}
-                    </span>
-                    <span className="text-slate-400 dark:text-slate-500 flex-shrink-0 ml-auto">
-                      {entry.createdAt ? new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                    </span>
-                  </div>
-                )
-              )}
-            </div>
+                  <h2
+                    onClick={() => setEditingTitle(true)}
+                    className="text-lg font-bold text-slate-800 dark:text-slate-100 tracking-tight cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/40 p-1 -m-1 rounded transition"
+                  >
+                    {issue.title}
+                  </h2>
+                )}
+              </div>
 
-            <div className="flex items-start gap-2">
-              <Input.TextArea
-                rows={2}
-                placeholder="Write a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                className="text-xs"
-              />
-              <Button
-                type="primary"
-                icon={<SendOutlined />}
-                onClick={handleAddComment}
-                loading={commentSubmitting}
-                disabled={!commentText.trim()}
-              >
-                Send
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar / Meta Details Column */}
-        <div className="flex flex-col gap-4 bg-slate-50/60 dark:bg-slate-800/40 p-3.5 rounded-lg border border-slate-200/60 dark:border-slate-700/60">
-          <div>
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Status</div>
-            <Select
-              value={selectedIssue.status}
-              onChange={handleStatusChange}
-              style={{ width: '100%' }}
-              options={Object.keys(ISSUE_STATUSES).map((statusKey) => ({
-                value: statusKey,
-                label: (
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: ISSUE_STATUSES[statusKey].badgeColor }}
+              {/* Description (Editable) */}
+              <div>
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Description
+                </div>
+                {editingDesc ? (
+                  <div className="flex flex-col gap-2">
+                    <Input.TextArea
+                      value={descValue}
+                      onChange={(e) => setDescValue(e.target.value)}
+                      rows={5}
+                      autoFocus
+                      placeholder="Add a detailed description..."
                     />
-                    <span>{ISSUE_STATUSES[statusKey].label}</span>
+                    <div className="flex items-center gap-2">
+                      <Button size="small" type="primary" onClick={handleSaveDesc}>
+                        Save
+                      </Button>
+                      <Button size="small" onClick={() => setEditingDesc(false)}>
+                        Cancel
+                      </Button>
+                    </div>
                   </div>
-                ),
-              }))}
-            />
-          </div>
-
-          <div>
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Assignee</div>
-            <Select
-              value={selectedIssue.assignee?.id || selectedIssue.assignee?._id}
-              onChange={handleAssigneeChange}
-              style={{ width: '100%' }}
-              options={teamMembers.map((m) => ({
-                value: m.id,
-                label: (
-                  <div className="flex items-center gap-2">
-                    <Avatar src={m.avatar} size={20} icon={<UserOutlined />} className="bg-slate-200 dark:bg-slate-700" />
-                    <span className="truncate">{m.name}</span>
+                ) : (
+                  <div
+                    onClick={() => setEditingDesc(true)}
+                    className="text-xs text-slate-700 dark:text-slate-300 whitespace-pre-wrap p-3 rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800 cursor-pointer hover:border-blue-400 transition leading-relaxed min-h-[70px]"
+                  >
+                    {issue.description || (
+                      <span className="text-slate-400 italic">Click to add description...</span>
+                    )}
                   </div>
-                ),
-              }))}
-            />
-          </div>
-
-          <div>
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Priority</div>
-            <Select
-              value={selectedIssue.priority}
-              onChange={handlePriorityChange}
-              style={{ width: '100%' }}
-              options={Object.keys(ISSUE_PRIORITIES).map((priorityKey) => ({
-                value: priorityKey,
-                label: (
-                  <div className="flex items-center gap-1.5">
-                    {ISSUE_PRIORITIES[priorityKey].icon}
-                    <span>{ISSUE_PRIORITIES[priorityKey].label}</span>
-                  </div>
-                ),
-              }))}
-            />
-          </div>
-
-          <div>
-            <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Milestone</div>
-            <Select
-              value={selectedIssue.milestoneId || undefined}
-              onChange={handleMilestoneChange}
-              allowClear
-              placeholder="No milestone"
-              style={{ width: '100%' }}
-              options={milestones.map((m) => ({ value: m.id, label: m.name }))}
-            />
-          </div>
-
-          <Divider className="!my-1 dark:border-slate-700" />
-
-          <div className="flex flex-col gap-2.5 text-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Project</span>
-              <span className="font-medium text-slate-800 dark:text-slate-200">{selectedIssue.projectName}</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Story Points</span>
-              <span className="font-mono font-medium px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200">
-                {selectedIssue.storyPoints || 0} pts
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Due Date</span>
-              <span className="font-medium text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                <CalendarOutlined className="text-slate-400 dark:text-slate-500" /> {selectedIssue.dueDate}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Reporter</span>
-              <span className="font-medium text-slate-800 dark:text-slate-200">{selectedIssue.reporter?.name || 'Admin'}</span>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Created</span>
-              <span className="font-medium text-slate-800 dark:text-slate-200">
-                {selectedIssue.createdAt ? new Date(selectedIssue.createdAt).toLocaleDateString() : '—'}
-              </span>
-            </div>
-
-            {selectedIssue.completedAt && (
-              <div className="flex items-center justify-between">
-                <span className="text-slate-500 dark:text-slate-400">Completed</span>
-                <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                  {new Date(selectedIssue.completedAt).toLocaleDateString()}
-                </span>
+                )}
               </div>
-            )}
-          </div>
 
-          {selectedIssue.labels?.length > 0 && (
-            <div className="mt-2">
-              <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Labels</div>
-              <div className="flex flex-wrap gap-1">
-                {selectedIssue.labels.map((label) => (
-                  <Tag key={label} className="!mr-0 text-[11px] font-normal text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
-                    {label}
-                  </Tag>
-                ))}
+              {/* Subtasks Section */}
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Subtasks ({completedSubtasksCount}/{subtasks.length})
+                  </div>
+                  {subtasks.length > 0 && (
+                    <span className="text-[11px] font-semibold text-slate-500">
+                      {subtasksProgress}% completed
+                    </span>
+                  )}
+                </div>
+
+                {subtasks.length > 0 && (
+                  <Progress percent={subtasksProgress} size="small" status="active" strokeColor="#16a34a" />
+                )}
+
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+                  {subtasks.map((st) => (
+                    <div
+                      key={st.id}
+                      className="px-3 py-2 flex items-center justify-between gap-2 hover:bg-slate-50 dark:hover:bg-slate-900/60 transition"
+                    >
+                      <label className="flex items-center gap-2 text-xs cursor-pointer min-w-0 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={st.completed}
+                          onChange={() => toggleSubtaskAction(issue.id, st.id)}
+                          className="rounded text-blue-600 focus:ring-0"
+                        />
+                        <span
+                          className={`truncate ${
+                            st.completed ? 'line-through text-slate-400 dark:text-slate-500' : 'text-slate-700 dark:text-slate-200'
+                          }`}
+                        >
+                          {st.title}
+                        </span>
+                      </label>
+
+                      <Button
+                        size="small"
+                        type="text"
+                        icon={<DeleteOutlined className="text-slate-400 hover:text-red-500" />}
+                        onClick={() => deleteSubtaskAction(issue.id, st.id)}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Add subtask input */}
+                  <form onSubmit={handleAddSubtask} className="p-2 bg-slate-50/50 dark:bg-slate-900/50 flex items-center gap-2">
+                    <PlusOutlined className="text-slate-400 text-xs" />
+                    <input
+                      type="text"
+                      value={newSubtaskTitle}
+                      onChange={(e) => setNewSubtaskTitle(e.target.value)}
+                      placeholder="Add subtask... (Press Enter)"
+                      className="flex-1 bg-transparent border-none text-xs text-slate-700 dark:text-slate-200 placeholder-slate-400 focus:outline-none"
+                    />
+                  </form>
+                </div>
+              </div>
+
+              {/* Linked Issues Section */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    Linked Issues ({(issue.issueLinks || []).length})
+                  </div>
+                  <Button
+                    size="small"
+                    type="dashed"
+                    icon={<LinkOutlined />}
+                    onClick={() => setLinkIssueOpen(true)}
+                    className="text-xs"
+                  >
+                    Link Issue
+                  </Button>
+                </div>
+
+                {(issue.issueLinks || []).length === 0 ? (
+                  <div className="text-[11px] text-slate-400 italic py-1">No linked issues.</div>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    {issue.issueLinks.map((link) => (
+                      <div
+                        key={link.id}
+                        className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2 text-xs bg-slate-50/50 dark:bg-slate-900/50"
+                      >
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="font-semibold text-purple-600 dark:text-purple-400">
+                            {link.relationship}
+                          </span>
+                          <span className="font-mono font-bold text-blue-600 dark:text-blue-400">
+                            {link.targetIssueKey}
+                          </span>
+                          <span className="text-slate-600 dark:text-slate-300 truncate">
+                            {link.targetIssueTitle}
+                          </span>
+                        </div>
+                        <Button
+                          size="small"
+                          type="text"
+                          icon={<DeleteOutlined className="text-slate-400 hover:text-red-500" />}
+                          onClick={() => deleteLinkAction(issue.id, link.id)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Development Metadata */}
+              {issue.devInfo && (
+                <div className="flex flex-col gap-2">
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <BranchesOutlined className="text-blue-500" /> Development
+                  </div>
+                  <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                        feature/{issue.key.toLowerCase()}-branch
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">1 commit • 1 pull request</div>
+                    </div>
+                    <Tag color="success" className="text-[10px] font-bold uppercase">
+                      {issue.devInfo.buildStatus || 'Passed'}
+                    </Tag>
+                  </div>
+                </div>
+              )}
+
+              {/* Comments & Activity Stream Tabs */}
+              <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+                <Tabs
+                  defaultActiveKey="comments"
+                  items={[
+                    {
+                      key: 'comments',
+                      label: `Comments (${(issue.comments || []).length})`,
+                      children: (
+                        <div className="flex flex-col gap-4 py-2">
+                          {/* New comment input */}
+                          <form onSubmit={handleAddComment} className="flex gap-2.5 items-start">
+                            <Avatar size={28} className="bg-blue-600 flex-shrink-0">
+                              {user?.firstName?.[0] || 'U'}
+                            </Avatar>
+                            <div className="flex-1 flex flex-col gap-2">
+                              <Input.TextArea
+                                value={commentText}
+                                onChange={(e) => setCommentText(e.target.value)}
+                                rows={2}
+                                placeholder="Add a comment... (Type @ to mention teammates)"
+                                className="text-xs"
+                              />
+                              {commentText.trim() && (
+                                <Button
+                                  size="small"
+                                  type="primary"
+                                  htmlType="submit"
+                                  icon={<SendOutlined />}
+                                  className="self-end text-xs"
+                                >
+                                  Save Comment
+                                </Button>
+                              )}
+                            </div>
+                          </form>
+
+                          {/* Comments List */}
+                          <div className="flex flex-col gap-3">
+                            {(issue.comments || []).map((c) => (
+                              <div
+                                key={c.id}
+                                className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/70 dark:border-slate-800 flex flex-col gap-2"
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <Avatar size={22} className="bg-blue-600 text-[10px]">
+                                      {c.author?.name?.[0] || 'U'}
+                                    </Avatar>
+                                    <span className="font-semibold text-xs text-slate-800 dark:text-slate-200">
+                                      {c.author?.name}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] text-slate-400">
+                                    {new Date(c.createdAt).toLocaleString()}
+                                  </span>
+                                </div>
+
+                                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-7">
+                                  {c.content}
+                                </p>
+
+                                {/* Emoji Reactions */}
+                                <div className="flex items-center gap-1 pl-7 pt-1">
+                                  {EMOJIS.map((emoji) => (
+                                    <button
+                                      key={emoji}
+                                      type="button"
+                                      onClick={() => addReactionAction(issue.id, c.id, emoji)}
+                                      className="text-xs px-2 py-0.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 transition flex items-center gap-1"
+                                    >
+                                      <span>{emoji}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: 'history',
+                      label: 'Activity History',
+                      children: (
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800 py-2">
+                          {(issue.activity || []).map((act) => (
+                            <div key={act.id} className="py-2 flex items-center justify-between text-xs">
+                              <span className="text-slate-600 dark:text-slate-300">
+                                <span className="font-semibold text-slate-800 dark:text-slate-200">
+                                  {act.actor?.name || 'System'}
+                                </span>{' '}
+                                {act.message}
+                              </span>
+                              <span className="text-[10px] text-slate-400 flex-shrink-0">
+                                {new Date(act.createdAt).toLocaleTimeString()}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      ),
+                    },
+                  ]}
+                />
               </div>
             </div>
-          )}
+
+            {/* Right 4 Cols: Meta, Assignee, Sprint, Estimates */}
+            <div className="lg:col-span-4 p-5 bg-slate-50/30 dark:bg-slate-900/30 flex flex-col gap-4">
+              {/* Status Selector */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Status
+                </label>
+                <Select
+                  value={issue.status}
+                  onChange={(val) => moveIssueStatus(issue.id, val)}
+                  className="w-full font-semibold text-xs"
+                  options={Object.keys(ISSUE_STATUSES).map((k) => ({
+                    value: k,
+                    label: ISSUE_STATUSES[k].label,
+                  }))}
+                />
+              </div>
+
+              {/* Priority Selector */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Priority
+                </label>
+                <Select
+                  value={issue.priority}
+                  onChange={(val) => editIssue(issue.id, { priority: val })}
+                  className="w-full text-xs"
+                  options={Object.keys(ISSUE_PRIORITIES).map((k) => ({
+                    value: k,
+                    label: ISSUE_PRIORITIES[k].label,
+                  }))}
+                />
+              </div>
+
+              {/* Assignee Selector */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Assignee
+                </label>
+                <Select
+                  value={issue.assignee?.id}
+                  onChange={(val) => assignIssueAction(issue.id, val)}
+                  placeholder="Unassigned"
+                  className="w-full text-xs"
+                  options={teamMembers.map((m) => ({
+                    value: m.id,
+                    label: m.name,
+                  }))}
+                />
+              </div>
+
+              {/* Story Points */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Story Points
+                </label>
+                <Input
+                  type="number"
+                  value={issue.storyPoints || 0}
+                  onChange={(e) => editIssue(issue.id, { storyPoints: Number(e.target.value) })}
+                  className="w-full text-xs font-bold"
+                />
+              </div>
+
+              {/* Sprint Selector */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Sprint
+                </label>
+                <Select
+                  value={issue.sprintId || 'BACKLOG'}
+                  onChange={(val) => editIssue(issue.id, { sprintId: val === 'BACKLOG' ? null : val })}
+                  className="w-full text-xs"
+                  options={[
+                    { value: 'BACKLOG', label: 'Backlog (No Sprint)' },
+                    ...sprints.map((s) => ({ value: s.id, label: s.name })),
+                  ]}
+                />
+              </div>
+
+              {/* Epic */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  Epic
+                </label>
+                <Select
+                  value={issue.epicId || 'NONE'}
+                  onChange={(val) => editIssue(issue.id, { epicId: val === 'NONE' ? null : val })}
+                  className="w-full text-xs"
+                  options={[
+                    { value: 'NONE', label: 'None' },
+                    ...epics.map((e) => ({ value: e.id, label: e.name })),
+                  ]}
+                />
+              </div>
+
+              {/* Time Tracking Progress */}
+              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    Time Tracking
+                  </span>
+                  <Button
+                    size="small"
+                    type="link"
+                    icon={<FieldTimeOutlined />}
+                    onClick={() => setLogWorkOpen(true)}
+                    className="!p-0 text-xs font-semibold"
+                  >
+                    Log Work
+                  </Button>
+                </div>
+
+                <Progress
+                  percent={
+                    issue.originalEstimate
+                      ? Math.min(100, Math.round(((issue.timeSpent || 0) / issue.originalEstimate) * 100))
+                      : 0
+                  }
+                  size="small"
+                  strokeColor="#3b82f6"
+                />
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                  <span>Logged: {issue.timeSpent || 0}h</span>
+                  <span>Remaining: {issue.remainingEstimate || 0}h</span>
+                </div>
+              </div>
+
+              {/* Dates */}
+              <div className="flex flex-col gap-1 text-[11px] text-slate-500 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800">
+                <div>Created: {new Date(issue.createdAt).toLocaleDateString()}</div>
+                <div>Updated: {new Date(issue.updatedAt).toLocaleDateString()}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Log Work Modal */}
+          <LogWorkModal
+            open={logWorkOpen}
+            issue={issue}
+            onClose={() => setLogWorkOpen(false)}
+            onLogWork={logWorkAction}
+          />
+
+          {/* Link Issue Modal */}
+          <LinkIssueModal
+            open={linkIssueOpen}
+            currentIssue={issue}
+            allIssues={issues}
+            onClose={() => setLinkIssueOpen(false)}
+            onLinkIssue={linkIssueAction}
+          />
         </div>
-      </div>
+      )}
     </Drawer>
   );
 }

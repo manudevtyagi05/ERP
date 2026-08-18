@@ -2,6 +2,23 @@ const ApiResponse = require('../utils/ApiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 const authService = require('../services/auth.service');
 
+const register = asyncHandler(async (req, res) => {
+  const { companyName, firstName, lastName, email, password } = req.body;
+  const { user, company, token } = await authService.register({
+    companyName,
+    firstName,
+    lastName,
+    email,
+    password,
+  });
+
+  return ApiResponse.success(res, {
+    statusCode: 201,
+    message: 'Registration successful',
+    data: { user, company, token },
+  });
+});
+
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   const { user, company, token } = await authService.login({ email, password });
@@ -42,4 +59,12 @@ const updateProfile = asyncHandler(async (req, res) => {
   return ApiResponse.success(res, { message: 'Profile updated successfully', data: { user } });
 });
 
-module.exports = { login, getMe, logout, changePassword, updateNotificationPreferences, updateProfile };
+module.exports = {
+  register,
+  login,
+  getMe,
+  logout,
+  changePassword,
+  updateNotificationPreferences,
+  updateProfile,
+};

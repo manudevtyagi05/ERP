@@ -7,6 +7,10 @@ import {
   ArrowDownOutlined,
   MinusOutlined,
   WarningOutlined,
+  FireOutlined,
+  PlusSquareOutlined,
+  RiseOutlined,
+  StarOutlined,
 } from '@ant-design/icons';
 
 export const ISSUE_TYPES = {
@@ -33,6 +37,24 @@ export const ISSUE_TYPES = {
     color: '#7c3aed',
     bg: '#f5f3ff',
     icon: <CheckCircleOutlined style={{ color: '#7c3aed' }} />,
+  },
+  'Sub-task': {
+    label: 'Sub-task',
+    color: '#0891b2',
+    bg: '#ecfeff',
+    icon: <PlusSquareOutlined style={{ color: '#0891b2' }} />,
+  },
+  Improvement: {
+    label: 'Improvement',
+    color: '#0284c7',
+    bg: '#f0f9ff',
+    icon: <RiseOutlined style={{ color: '#0284c7' }} />,
+  },
+  Feature: {
+    label: 'Feature',
+    color: '#9333ea',
+    bg: '#faf5ff',
+    icon: <StarOutlined style={{ color: '#9333ea' }} />,
   },
 };
 
@@ -70,6 +92,11 @@ export const ISSUE_STATUSES = {
 };
 
 export const ISSUE_PRIORITIES = {
+  HIGHEST: {
+    label: 'Highest',
+    color: '#dc2626',
+    icon: <FireOutlined style={{ color: '#dc2626' }} />,
+  },
   CRITICAL: {
     label: 'Critical',
     color: '#dc2626',
@@ -90,12 +117,26 @@ export const ISSUE_PRIORITIES = {
     color: '#16a34a',
     icon: <ArrowDownOutlined style={{ color: '#16a34a' }} />,
   },
+  LOWEST: {
+    label: 'Lowest',
+    color: '#64748b',
+    icon: <ArrowDownOutlined style={{ color: '#94a3b8' }} />,
+  },
 };
 
+export const ISSUE_LINK_TYPES = [
+  { value: 'blocks', label: 'blocks' },
+  { value: 'is blocked by', label: 'is blocked by' },
+  { value: 'relates to', label: 'relates to' },
+  { value: 'duplicates', label: 'duplicates' },
+  { value: 'is duplicated by', label: 'is duplicated by' },
+  { value: 'depends on', label: 'depends on' },
+];
+
 export const KANBAN_COLUMNS = [
-  { id: 'BACKLOG', title: 'Backlog', color: '#94a3b8' },
-  { id: 'TODO', title: 'To Do', color: '#60a5fa' },
-  { id: 'IN_PROGRESS', title: 'In Progress', color: '#3b82f6' },
-  { id: 'IN_REVIEW', title: 'In Review', color: '#f59e0b' },
-  { id: 'DONE', title: 'Done', color: '#22c55e' },
+  { id: 'BACKLOG', title: 'Backlog', color: '#94a3b8', wipLimit: 0 },
+  { id: 'TODO', title: 'To Do', color: '#60a5fa', wipLimit: 0 },
+  { id: 'IN_PROGRESS', title: 'In Progress', color: '#3b82f6', wipLimit: 5 },
+  { id: 'IN_REVIEW', title: 'In Review', color: '#f59e0b', wipLimit: 3 },
+  { id: 'DONE', title: 'Done', color: '#22c55e', wipLimit: 0 },
 ];

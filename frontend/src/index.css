@@ -8,33 +8,32 @@
     border-color: #e2e8f0;
   }
   .dark * {
-    border-color: #334155;
+    border-color: #1e293b;
   }
 }
 
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
   background-color: #f8fafc;
-  color: #1e293b;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  color: #0f172a;
+  font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 html.dark,
 html.dark body,
 html.dark #root {
-  background-color: #0b0f19;
-  color: #f1f5f9;
+  background-color: #090d16;
+  color: #f8fafc;
 }
 
-/* Custom subtle scrollbars */
+/* Custom subtle smooth scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -54,71 +53,136 @@ html.dark #root {
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #1e293b;
 }
 
 html.dark ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #334155;
 }
 
-/* Jira Kanban drag & column aesthetics */
-.kanban-column {
-  background: #f1f5f9;
-  border-radius: 8px;
-  transition: background 0.15s ease;
+/* Explicit Sidebar Scrollbar & Menu styling */
+.ant-layout-sider {
+  height: 100vh !important;
+  max-height: 100vh !important;
 }
 
-html.dark .kanban-column {
-  background: #111827;
-  border: 1px solid #1e293b;
+.ant-layout-sider-children {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  max-height: 100vh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
 }
 
+.sidebar-scroll-container {
+  flex: 1 1 0% !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin !important;
+  scrollbar-color: #94a3b8 transparent !important;
+}
+
+.sidebar-scroll-container::-webkit-scrollbar {
+  width: 5px !important;
+  display: block !important;
+}
+
+.sidebar-scroll-container::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.sidebar-scroll-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 6px !important;
+}
+
+.sidebar-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+html.dark .sidebar-scroll-container {
+  scrollbar-color: #334155 transparent !important;
+}
+
+html.dark .sidebar-scroll-container::-webkit-scrollbar-thumb {
+  background: #334155 !important;
+}
+
+html.dark .sidebar-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: #475569 !important;
+}
+
+/* Sidebar Menu Text full visibility */
+.sidebar-scroll-container .ant-menu:not(.ant-menu-inline-collapsed) .ant-menu-item {
+  margin: 2px 8px !important;
+  width: calc(100% - 16px) !important;
+  border-radius: 8px !important;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  font-size: 13px !important;
+}
+
+.sidebar-scroll-container .ant-menu-title-content {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Glassmorphism & Premium UI surfaces */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+html.dark .glass-panel {
+  background: rgba(14, 21, 38, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+.glow-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glow-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.1), 0 8px 10px -6px rgba(37, 99, 235, 0.05);
+}
+
+html.dark .glow-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.2), 0 8px 10px -6px rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+/* Jira Kanban card micro-interactions */
 .kanban-card {
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 
 .kanban-card:hover {
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.04);
-  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.04);
+  transform: translateY(-1.5px);
+  border-color: #3b82f6;
 }
 
 html.dark .kanban-card {
-  background-color: #162035;
+  background-color: #131b2e;
   border-color: #1e293b;
   color: #f1f5f9;
 }
 
 html.dark .kanban-card:hover {
-  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.4), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 8px 20px -2px rgba(0, 0, 0, 0.5), 0 2px 6px -2px rgba(0, 0, 0, 0.2);
   border-color: #3b82f6;
 }
 
-/* Subtle transitions for layout elements */
-.ant-layout-sider {
-  transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
-}
-
-/* Jira-style clean menu item styling */
-.jira-sidebar .ant-menu-item,
-.jira-sidebar .ant-menu-submenu-title {
-  border-radius: 6px !important;
-  margin: 2px 8px !important;
-  width: calc(100% - 16px) !important;
-  font-weight: 450 !important;
-  transition: background-color 0.15s ease, color 0.15s ease !important;
-}
-
-.jira-sidebar .ant-menu-item-selected {
-  font-weight: 600 !important;
-}
-
-html.dark .jira-sidebar {
-  background: #0e1526 !important;
-  border-color: #1e293b !important;
-}
-
-/* Modern Ant Design Table custom styling */
+/* Ant Design Table custom styling */
 .jira-table .ant-table {
   background: transparent;
 }
@@ -126,11 +190,12 @@ html.dark .jira-sidebar {
 .jira-table .ant-table-thead > tr > th {
   background: #f8fafc !important;
   color: #64748b !important;
-  font-weight: 600 !important;
-  font-size: 12px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.04em !important;
+  letter-spacing: 0.05em !important;
   border-bottom: 1px solid #e2e8f0 !important;
+  padding: 10px 14px !important;
 }
 
 .jira-table .ant-table-tbody > tr:hover > td {
@@ -138,13 +203,13 @@ html.dark .jira-sidebar {
 }
 
 html.dark .jira-table .ant-table-thead > tr > th {
-  background: #111827 !important;
+  background: #0e1526 !important;
   color: #94a3b8 !important;
   border-bottom: 1px solid #1e293b !important;
 }
 
 html.dark .jira-table .ant-table-tbody > tr:hover > td {
-  background: #182236 !important;
+  background: #162035 !important;
 }
 
 /* Responsive Modal & Drawer overrides */
@@ -162,15 +227,3 @@ html.dark .jira-table .ant-table-tbody > tr:hover > td {
     padding: 16px !important;
   }
 }
-
-/* Kanban horizontal swipe on touch/small viewports */
-.kanban-board-container {
-  scrollbar-width: thin;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Mobile drawer clean styling */
-.mobile-nav-drawer .ant-drawer-body {
-  padding: 0 !important;
-}
-

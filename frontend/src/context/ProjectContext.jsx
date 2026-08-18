@@ -2,6 +2,11 @@ import { createContext, useContext, useState, useEffect, useCallback } from 'rea
 import { useAuth } from './AuthContext';
 import * as projectService from '../services/projectService';
 import * as issueService from '../services/issueService';
+import * as sprintService from '../services/sprintService';
+import * as epicService from '../services/epicService';
+import * as releaseService from '../services/releaseService';
+import * as componentService from '../services/componentService';
+import * as filterService from '../services/filterService';
 import * as notificationService from '../services/notificationService';
 import { listStaff } from '../services/staffService';
 
@@ -26,6 +31,11 @@ export function ProjectProvider({ children }) {
 
   const [projects, setProjects] = useState([]);
   const [issues, setIssues] = useState([]);
+  const [sprints, setSprints] = useState([]);
+  const [epics, setEpics] = useState([]);
+  const [releases, setReleases] = useState([]);
+  const [components, setComponents] = useState([]);
+  const [savedFilters, setSavedFilters] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [stats, setStats] = useState({
@@ -36,14 +46,13 @@ export function ProjectProvider({ children }) {
     totalStoryPoints: 0,
     completedStoryPoints: 0,
     completionRate: 0,
+    overdueCount: 0,
+    dueTodayCount: 0,
+    upcomingCount: 0,
   });
 
   const [loading, setLoading] = useState(true);
-  // "mine" is the default, safe experience: only tasks this user created or is
-  // assigned to. Pages that need the organizational picture (Board, All Issues,
-  // Reports, Calendar, the manager dashboard) intentionally switch this to
-  // "all" on mount — the backend re-enforces the same boundary either way.
-  const [viewScope, setViewScope] = useState('mine');
+  const [viewScope, setViewScope] = useState('all');
   const [activeProjectKey, setActiveProjectKey] = useState('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [createIssueModalOpen, setCreateIssueModalOpen] = useState(false);
@@ -60,16 +69,37 @@ export function ProjectProvider({ children }) {
 
     try {
       setLoading(true);
-      const [fetchedProjects, fetchedIssues, fetchedStats, staffResponse, notificationResponse] = await Promise.all([
+      const [
+        fetchedProjects,
+        fetchedIssues,
+        fetchedStats,
+        fetchedSprints,
+        fetchedEpics,
+        fetchedReleases,
+        fetchedComponents,
+        fetchedFilters,
+        staffResponse,
+        notificationResponse,
+      ] = await Promise.all([
         projectService.listProjects().catch(() => []),
         issueService.listIssues({ scope: viewScope }).catch(() => []),
         issueService.getIssueStats().catch(() => null),
+        sprintService.listSprints().catch(() => []),
+        epicService.listEpics().catch(() => []),
+        releaseService.listReleases().catch(() => []),
+        componentService.listComponents().catch(() => []),
+        filterService.listFilters().catch(() => []),
         listStaff({ limit: 50 }).catch(() => ({ items: [] })),
         notificationService.listNotifications({ limit: 50 }).catch(() => ({ items: [] })),
       ]);
 
       setProjects(fetchedProjects || []);
       setIssues(fetchedIssues || []);
+      setSprints(fetchedSprints || []);
+      setEpics(fetchedEpics || []);
+      setReleases(fetchedReleases || []);
+      setComponents(fetchedComponents || []);
+      setSavedFilters(fetchedFilters || []);
 
       if (fetchedStats) {
         setStats(fetchedStats);
@@ -102,10 +132,7 @@ export function ProjectProvider({ children }) {
     refreshData();
   }, [refreshData]);
 
-  // The issue drawer, global search and notification links can point at an
-  // issue outside the currently-loaded scope (e.g. an admin opening an issue
-  // assigned to someone else while viewing "My Tasks"), so it is always
-  // fetched by id directly rather than looked up in the scoped `issues` list.
+  // Fetch full details of selected issue
   useEffect(() => {
     if (!selectedIssueId) {
       setSelectedIssue(null);
@@ -132,207 +159,231 @@ export function ProjectProvider({ children }) {
   const activeProject =
     activeProjectKey === 'ALL' ? null : projects.find((p) => p.key === activeProjectKey) || null;
 
-  // Applies a freshly-saved issue to local state: updates it in the scoped
-  // list (dropping it if it no longer belongs to "mine", e.g. it was just
-  // reassigned away from the current user) and syncs the open drawer.
+  const activeSprint =
+    sprints.find(
+      (s) =>
+        s.status === 'ACTIVE' &&
+        (activeProjectKey === 'ALL' || s.projectKey === activeProjectKey)
+    ) || null;
+
+  // Apply issue update locally & sync open drawer
   const applyIssueUpdate = useCallback(
     (updatedIssue) => {
       setIssues((prev) => {
-        const stillMine =
-          viewScope !== 'mine' ||
-          updatedIssue.assignee?.id === user?.id ||
-          updatedIssue.createdBy === user?.id ||
-          updatedIssue.reporter?.id === user?.id;
-
         const exists = prev.some((i) => i.id === updatedIssue.id);
-        if (!stillMine) {
-          return prev.filter((i) => i.id !== updatedIssue.id);
+        if (exists) {
+          return prev.map((i) => (i.id === updatedIssue.id ? updatedIssue : i));
         }
-        if (!exists) {
-          return [updatedIssue, ...prev];
-        }
-        return prev.map((i) => (i.id === updatedIssue.id ? updatedIssue : i));
+        return [updatedIssue, ...prev];
       });
-      setSelectedIssue((prev) => (prev && prev.id === updatedIssue.id ? updatedIssue : prev));
+
+      if (selectedIssue && selectedIssue.id === updatedIssue.id) {
+        setSelectedIssue(updatedIssue);
+      }
     },
-    [viewScope, user]
+    [selectedIssue]
   );
 
-  const addIssue = async (issueData) => {
-    try {
-      const created = await issueService.createIssue(issueData);
-      await refreshData();
-      return created;
-    } catch (err) {
-      console.error('Failed to create issue:', err);
-      throw err;
-    }
+  // Issue CRUD actions
+  const addIssue = async (payload) => {
+    const created = await issueService.createIssue(payload);
+    setIssues((prev) => [created, ...prev]);
+    return created;
   };
 
-  const updateIssue = async (id, updates) => {
+  const editIssue = async (id, payload) => {
+    const updated = await issueService.updateIssue(id, payload);
+    applyIssueUpdate(updated);
+    return updated;
+  };
+
+  const moveIssueStatus = async (id, newStatus) => {
+    // Optimistic update
+    setIssues((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i))
+    );
+    if (selectedIssue && selectedIssue.id === id) {
+      setSelectedIssue((prev) => (prev ? { ...prev, status: newStatus } : null));
+    }
     try {
-      const updated = await issueService.updateIssue(id, updates);
+      const updated = await issueService.moveIssueStatus(id, newStatus);
       applyIssueUpdate(updated);
-      refreshData();
       return updated;
     } catch (err) {
-      console.error('Failed to update issue:', err);
-      throw err;
-    }
-  };
-
-  const reassignIssue = async (id, assigneeId) => {
-    try {
-      const updated = await issueService.assignIssue(id, assigneeId);
-      applyIssueUpdate(updated);
-      refreshData();
-      return updated;
-    } catch (err) {
-      console.error('Failed to reassign issue:', err);
-      throw err;
-    }
-  };
-
-  const deleteIssue = async (id) => {
-    try {
-      await issueService.deleteIssue(id);
-      setIssues((prev) => prev.filter((i) => i.id !== id));
-      refreshData();
-    } catch (err) {
-      console.error('Failed to delete issue:', err);
-      throw err;
-    }
-  };
-
-  const moveIssueStatus = async (issueId, newStatus) => {
-    try {
-      // Optimistic update for instant UI feedback
-      setIssues((prev) =>
-        prev.map((i) => (i.id === issueId ? { ...i, status: newStatus } : i))
-      );
-      const updated = await issueService.moveIssueStatus(issueId, newStatus);
-      applyIssueUpdate(updated);
-      refreshData();
-    } catch (err) {
-      console.error('Failed to move issue status:', err);
       refreshData();
       throw err;
     }
   };
 
-  const addComment = async (issueId, text) => {
-    try {
-      const updated = await issueService.addComment(issueId, text);
-      applyIssueUpdate(updated);
-      return updated;
-    } catch (err) {
-      console.error('Failed to add comment:', err);
-      throw err;
+  const assignIssueAction = async (id, assigneeId) => {
+    const updated = await issueService.assignIssue(id, assigneeId);
+    applyIssueUpdate(updated);
+    return updated;
+  };
+
+  const deleteIssueAction = async (id) => {
+    await issueService.deleteIssue(id);
+    setIssues((prev) => prev.filter((i) => i.id !== id));
+    if (selectedIssueId === id) {
+      setSelectedIssueId(null);
+      setSelectedIssue(null);
     }
   };
 
-  const toggleSubtask = async (issueId, subtaskId) => {
-    try {
-      const updated = await issueService.toggleSubtask(issueId, subtaskId);
-      applyIssueUpdate(updated);
-      return updated;
-    } catch (err) {
-      console.error('Failed to toggle subtask:', err);
-      throw err;
-    }
+  const addCommentAction = async (id, content) => {
+    const updated = await issueService.addComment(id, content);
+    applyIssueUpdate(updated);
+    return updated;
   };
 
-  const addProject = async (projectData) => {
-    try {
-      const created = await projectService.createProject(projectData);
-      await refreshData();
-      return created;
-    } catch (err) {
-      console.error('Failed to create project:', err);
-      throw err;
-    }
+  const addReactionAction = async (id, commentId, emoji) => {
+    const updated = await issueService.addReaction(id, commentId, emoji);
+    applyIssueUpdate(updated);
+    return updated;
   };
 
-  const updateProject = async (id, payload) => {
-    try {
-      const updated = await projectService.updateProject(id, payload);
-      await refreshData();
-      return updated;
-    } catch (err) {
-      console.error('Failed to update project:', err);
-      throw err;
-    }
+  const logWorkAction = async (id, payload) => {
+    const updated = await issueService.logWork(id, payload);
+    applyIssueUpdate(updated);
+    return updated;
   };
 
-  const toggleProjectStar = async (idOrKey) => {
-    try {
-      await projectService.toggleProjectStar(idOrKey);
-      setProjects((prev) =>
-        prev.map((p) => (p.key === idOrKey || p.id === idOrKey ? { ...p, star: !p.star } : p))
-      );
-    } catch (err) {
-      console.error('Failed to toggle project star:', err);
-    }
+  const linkIssueAction = async (id, payload) => {
+    const updated = await issueService.linkIssue(id, payload);
+    applyIssueUpdate(updated);
+    return updated;
   };
 
-  const markNotificationAsRead = async (id) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, unread: false } : n)));
-    try {
-      await notificationService.markNotificationAsRead(id);
-    } catch (err) {
-      console.error('Failed to mark notification as read:', err);
-    }
+  const deleteLinkAction = async (id, linkId) => {
+    const updated = await issueService.deleteLink(id, linkId);
+    applyIssueUpdate(updated);
+    return updated;
   };
 
-  const markAllNotificationsAsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
-    try {
-      await notificationService.markAllNotificationsAsRead();
-    } catch (err) {
-      console.error('Failed to mark all notifications as read:', err);
-    }
+  const toggleWatcherAction = async (id) => {
+    const updated = await issueService.toggleWatcher(id);
+    applyIssueUpdate(updated);
+    return updated;
   };
 
-  const value = {
-    loading,
-    refreshData,
-    projects,
-    activeProjectKey,
-    setActiveProjectKey,
-    activeProject,
-    addProject,
-    updateProject,
-    toggleProjectStar,
-    issues,
-    viewScope,
-    setViewScope,
-    addIssue,
-    updateIssue,
-    reassignIssue,
-    deleteIssue,
-    moveIssueStatus,
-    addComment,
-    toggleSubtask,
-    teamMembers,
-    notifications,
-    markNotificationAsRead,
-    markAllNotificationsAsRead,
-    searchQuery,
-    setSearchQuery,
-    createIssueModalOpen,
-    setCreateIssueModalOpen,
-    selectedIssueId,
-    setSelectedIssueId,
-    selectedIssue,
-    selectedIssueLoading,
-    stats,
+  const toggleVoteAction = async (id) => {
+    const updated = await issueService.toggleVote(id);
+    applyIssueUpdate(updated);
+    return updated;
   };
 
-  return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>;
+  const addSubtaskAction = async (id, payload) => {
+    const updated = await issueService.addSubtask(id, payload);
+    applyIssueUpdate(updated);
+    return updated;
+  };
+
+  const toggleSubtaskAction = async (id, subtaskId) => {
+    const updated = await issueService.toggleSubtask(id, subtaskId);
+    applyIssueUpdate(updated);
+    return updated;
+  };
+
+  const deleteSubtaskAction = async (id, subtaskId) => {
+    const updated = await issueService.deleteSubtask(id, subtaskId);
+    applyIssueUpdate(updated);
+    return updated;
+  };
+
+  // Sprint actions
+  const createSprintAction = async (payload) => {
+    const created = await sprintService.createSprint(payload);
+    setSprints((prev) => [...prev, created]);
+    return created;
+  };
+
+  const startSprintAction = async (id, payload) => {
+    const started = await sprintService.startSprint(id, payload);
+    setSprints((prev) => prev.map((s) => (s.id === id ? started : s)));
+    refreshData();
+    return started;
+  };
+
+  const completeSprintAction = async (id, payload) => {
+    const res = await sprintService.completeSprint(id, payload);
+    refreshData();
+    return res;
+  };
+
+  const deleteSprintAction = async (id) => {
+    await sprintService.deleteSprint(id);
+    setSprints((prev) => prev.filter((s) => s.id !== id));
+    refreshData();
+  };
+
+  // Project star action
+  const toggleProjectStar = async (projectId) => {
+    const proj = projects.find((p) => p.id === projectId);
+    if (!proj) return;
+    const updated = await projectService.updateProject(projectId, { star: !proj.star });
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, star: updated.star } : p)));
+  };
+
+  return (
+    <ProjectContext.Provider
+      value={{
+        projects,
+        issues,
+        sprints,
+        epics,
+        releases,
+        components,
+        savedFilters,
+        teamMembers,
+        notifications,
+        stats,
+        loading,
+        viewScope,
+        setViewScope,
+        activeProjectKey,
+        setActiveProjectKey,
+        activeProject,
+        activeSprint,
+        searchQuery,
+        setSearchQuery,
+        createIssueModalOpen,
+        setCreateIssueModalOpen,
+        selectedIssueId,
+        setSelectedIssueId,
+        selectedIssue,
+        selectedIssueLoading,
+        refreshData,
+        addIssue,
+        editIssue,
+        moveIssueStatus,
+        assignIssueAction,
+        deleteIssueAction,
+        addCommentAction,
+        addReactionAction,
+        logWorkAction,
+        linkIssueAction,
+        deleteLinkAction,
+        toggleWatcherAction,
+        toggleVoteAction,
+        addSubtaskAction,
+        toggleSubtaskAction,
+        deleteSubtaskAction,
+        createSprintAction,
+        startSprintAction,
+        completeSprintAction,
+        deleteSprintAction,
+        toggleProjectStar,
+      }}
+    >
+      {children}
+    </ProjectContext.Provider>
+  );
 }
 
 export function useProject() {
   const ctx = useContext(ProjectContext);
-  if (!ctx) throw new Error('useProject must be used within a ProjectProvider');
+  if (!ctx) {
+    throw new Error('useProject must be used within a ProjectProvider');
+  }
   return ctx;
 }

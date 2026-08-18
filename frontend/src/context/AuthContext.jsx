@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import {
+  registerRequest,
   loginRequest,
   fetchCurrentUser,
   logoutRequest,
@@ -34,6 +35,13 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('auth:unauthorized', clearOnUnauthorized);
   }, []);
 
+  const register = useCallback(async (data) => {
+    const { user: loggedInUser, token } = await registerRequest(data);
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    setUser(loggedInUser);
+    return loggedInUser;
+  }, []);
+
   const login = useCallback(async (credentials) => {
     const { user: loggedInUser, token } = await loginRequest(credentials);
     localStorage.setItem(AUTH_TOKEN_KEY, token);
@@ -64,6 +72,7 @@ export function AuthProvider({ children }) {
     user,
     isAuthenticated: Boolean(user),
     initializing,
+    register,
     login,
     logout,
     hasPermission,

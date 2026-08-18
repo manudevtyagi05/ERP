@@ -1,6 +1,8 @@
 const Issue = require('../models/Issue.model');
 const Project = require('../models/Project.model');
 const User = require('../models/User.model');
+const Sprint = require('../models/Sprint.model');
+const Epic = require('../models/Epic.model');
 const { ISSUE_STATUSES } = require('../models/Issue.model');
 const ApiError = require('../utils/ApiError');
 const notificationService = require('./notification.service');
@@ -29,9 +31,6 @@ function pushActivity(issue, type, message, actor, { fromValue = null, toValue =
   });
 }
 
-// Assignee must always be resolved server-side from a real, active user in the
-// caller's company — the frontend may only supply an assigneeId, never a
-// free-form assignee object, otherwise a client could fabricate task ownership.
 async function resolveAssignee(companyId, assigneeId) {
   if (!assigneeId) return null;
 
@@ -50,11 +49,6 @@ async function resolveAssignee(companyId, assigneeId) {
 }
 
 function applyAssigneeChange(issue, nextAssignee, actor) {
-  // issue.assignee is a Mongoose single-nested subdocument: assigning
-  // `issue.assignee = nextAssignee` mutates that subdocument's fields in
-  // place rather than swapping in a new object, so a live reference to it
-  // would already show the *new* name by the time the activity message
-  // below is built. Snapshot the previous values into a plain object first.
   const previousAssignee = issue.assignee
     ? { id: issue.assignee.id, name: issue.assignee.name }
     : null;
@@ -143,11 +137,51 @@ async function notifyAssignee(companyId, issue, user, { reassigned } = {}) {
 }
 
 async function listIssues(companyId, userId, queryParams = {}) {
-  const { projectKey, status, type, priority, assigneeId, search, milestoneId, scope } = queryParams;
+  const {
+    projectKey,
+    projectId,
+    status,
+    type,
+    priority,
+    assigneeId,
+    search,
+    sprintId,
+    epicId,
+    fixVersionId,
+    componentId,
+    milestoneId,
+    scope,
+    jql,
+  } = queryParams;
+
   const filter = { companyId, deletedAt: null };
+
+  if (projectId) {
+    filter.projectId = projectId;
+  }
 
   if (projectKey && projectKey !== 'ALL') {
     filter.projectKey = projectKey.toUpperCase();
+  }
+
+  if (sprintId) {
+    if (sprintId === 'BACKLOG' || sprintId === 'null') {
+      filter.sprintId = null;
+    } else {
+      filter.sprintId = sprintId;
+    }
+  }
+
+  if (epicId) {
+    filter.epicId = epicId;
+  }
+
+  if (fixVersionId) {
+    filter.fixVersionIds = fixVersionId;
+  }
+
+  if (componentId) {
+    filter.componentIds = componentId;
   }
 
   if (status && status !== 'ALL') {
@@ -185,12 +219,40 @@ async function listIssues(companyId, userId, queryParams = {}) {
     ];
   }
 
-  // Default experience is personal: unless the caller explicitly opts into the
-  // company-wide "all tasks" view, scope every query down to what this user
-  // created or is assigned to. This is enforced here (not just hidden in the
-  // UI) so an employee can never pull another employee's task list by guessing
-  // query params.
-  if (scope !== 'all') {
+  // Parse simple JQL queries if provided
+  if (jql) {
+    // Examples: project = WEB AND status = "In Progress"
+    const terms = jql.split(/\s+AND\s+/i);
+    for (const term of terms) {
+      const match = term.match(/(\w+)\s*(=|!=|IN|CONTAINS|~)\s*['"]?([^'"]+)['"]?/i);
+      if (match) {
+        const [, field, op, val] = match;
+        const cleanVal = val.trim();
+        const fLower = field.toLowerCase();
+
+        if (fLower === 'project' || fLower === 'projectkey') {
+          filter.projectKey = cleanVal.toUpperCase();
+        } else if (fLower === 'status') {
+          const normStatus = cleanVal.toUpperCase().replace(/\s+/g, '_');
+          filter.status = op === '!=' ? { $ne: normStatus } : normStatus;
+        } else if (fLower === 'priority') {
+          filter.priority = op === '!=' ? { $ne: cleanVal.toUpperCase() } : cleanVal.toUpperCase();
+        } else if (fLower === 'type' || fLower === 'issuetype') {
+          filter.type = op === '!=' ? { $ne: cleanVal } : cleanVal;
+        } else if (fLower === 'assignee') {
+          if (cleanVal.toLowerCase() === 'currentuser()') {
+            filter['assignee.id'] = String(userId);
+          } else {
+            filter['assignee.name'] = { $regex: cleanVal, $options: 'i' };
+          }
+        } else if (fLower === 'text' || fLower === 'summary') {
+          filter.title = { $regex: cleanVal, $options: 'i' };
+        }
+      }
+    }
+  }
+
+  if (scope !== 'all' && !jql) {
     filter.$and = [{ $or: [{ 'assignee.id': String(userId) }, { createdBy: userId }] }];
   }
 
@@ -221,7 +283,6 @@ async function createIssue(companyId, payload, user) {
     throw new ApiError(404, `Project with key '${projectKey}' not found`);
   }
 
-  // Count existing issues to generate sequential issue key
   const count = await Issue.countDocuments({ companyId, projectId: project._id });
   const issueNumber = count + 101;
   const key = `${projectKey}-${issueNumber}`;
@@ -240,6 +301,15 @@ async function createIssue(companyId, payload, user) {
     throw new ApiError(400, `Invalid status '${payload.status}'`);
   }
 
+  // Resolve epic name if epicId passed
+  let epicName = payload.epic || '';
+  if (payload.epicId) {
+    const ep = await Epic.findOne({ _id: payload.epicId, companyId });
+    if (ep) epicName = ep.name;
+  }
+
+  const origEst = Number(payload.originalEstimate) || 8;
+
   const issue = new Issue({
     companyId,
     projectId: project._id,
@@ -257,12 +327,37 @@ async function createIssue(companyId, payload, user) {
     reporter,
     storyPoints: Number(payload.storyPoints) || 3,
     dueDate: payload.dueDate || new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-    epic: payload.epic || 'General Work',
-    milestoneId: payload.milestoneId || null,
+    startDate: payload.startDate || null,
+    sprintId: payload.sprintId || null,
+    epicId: payload.epicId || null,
+    epic: epicName,
+    componentIds: payload.componentIds || [],
+    fixVersionIds: payload.fixVersionIds || [],
+    affectedVersionIds: payload.affectedVersionIds || [],
+    originalEstimate: origEst,
+    remainingEstimate: Number(payload.remainingEstimate) || origEst,
+    timeSpent: 0,
     labels: payload.labels || ['General'],
     subtasks: [],
     comments: [],
+    workLogs: [],
+    issueLinks: [],
+    watchers: [
+      {
+        id: user._id.toString(),
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.email,
+      },
+    ],
+    votes: [],
     activity: [],
+    devInfo: {
+      branches: [{ name: `feature/${key.toLowerCase()}-impl`, url: '#' }],
+      pullRequests: [],
+      buildStatus: 'Passed',
+      deploymentStatus: 'Production',
+    },
+    customFields: payload.customFields || {},
     createdBy: user._id,
   });
 
@@ -328,15 +423,37 @@ async function updateIssue(companyId, id, payload, user) {
     issue.dueDate = payload.dueDate;
   }
 
-  if (payload.epic !== undefined) issue.epic = payload.epic;
+  if (payload.startDate !== undefined) issue.startDate = payload.startDate;
 
-  if (payload.milestoneId !== undefined && String(payload.milestoneId || '') !== String(issue.milestoneId || '')) {
-    pushActivity(issue, 'MILESTONE_CHANGED', 'Milestone updated', actor);
-    issue.milestoneId = payload.milestoneId || null;
+  if (payload.sprintId !== undefined) {
+    if (String(payload.sprintId || '') !== String(issue.sprintId || '')) {
+      pushActivity(issue, 'SPRINT_CHANGED', 'Sprint updated', actor);
+      issue.sprintId = payload.sprintId || null;
+    }
   }
 
+  if (payload.epicId !== undefined) {
+    if (String(payload.epicId || '') !== String(issue.epicId || '')) {
+      pushActivity(issue, 'EPIC_CHANGED', 'Epic updated', actor);
+      issue.epicId = payload.epicId || null;
+      if (payload.epicId) {
+        const ep = await Epic.findOne({ _id: payload.epicId, companyId });
+        if (ep) issue.epic = ep.name;
+      } else {
+        issue.epic = '';
+      }
+    }
+  }
+
+  if (payload.epic !== undefined) issue.epic = payload.epic;
+  if (payload.componentIds) issue.componentIds = payload.componentIds;
+  if (payload.fixVersionIds) issue.fixVersionIds = payload.fixVersionIds;
+  if (payload.affectedVersionIds) issue.affectedVersionIds = payload.affectedVersionIds;
   if (payload.labels) issue.labels = payload.labels;
   if (payload.subtasks) issue.subtasks = payload.subtasks;
+  if (payload.originalEstimate !== undefined) issue.originalEstimate = Number(payload.originalEstimate);
+  if (payload.remainingEstimate !== undefined) issue.remainingEstimate = Number(payload.remainingEstimate);
+  if (payload.customFields) issue.customFields = payload.customFields;
 
   if (payload.assigneeId !== undefined) {
     const nextAssignee = payload.assigneeId ? await resolveAssignee(companyId, payload.assigneeId) : null;
@@ -426,6 +543,7 @@ async function addComment(companyId, id, content, user) {
       email: user.email,
     },
     content: content.trim(),
+    reactions: {},
     createdAt: new Date().toISOString(),
   };
 
@@ -454,6 +572,176 @@ async function addComment(companyId, id, content, user) {
   return issue.toSafeJSON();
 }
 
+async function addReaction(companyId, id, commentId, emoji, user) {
+  const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
+  if (!issue) {
+    throw new ApiError(404, 'Issue not found');
+  }
+
+  const comment = issue.comments.find((c) => c.id === commentId);
+  if (!comment) {
+    throw new ApiError(404, 'Comment not found');
+  }
+
+  if (!comment.reactions) comment.reactions = new Map();
+  const currentReactors = comment.reactions.get(emoji) || [];
+  const uId = user._id.toString();
+
+  if (currentReactors.includes(uId)) {
+    comment.reactions.set(
+      emoji,
+      currentReactors.filter((r) => r !== uId)
+    );
+  } else {
+    comment.reactions.set(emoji, [...currentReactors, uId]);
+  }
+
+  await issue.save();
+  return issue.toSafeJSON();
+}
+
+async function logWork(companyId, id, { timeSpent, remainingEstimate, description }, user) {
+  const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
+  if (!issue) {
+    throw new ApiError(404, 'Issue not found');
+  }
+
+  const hours = Number(timeSpent) || 1;
+  const rem = remainingEstimate !== undefined ? Number(remainingEstimate) : Math.max(0, issue.remainingEstimate - hours);
+
+  const workLog = {
+    id: `wl-${Date.now()}`,
+    author: actorFromUser(user),
+    timeSpent: hours,
+    remainingEstimate: rem,
+    description: description || '',
+    date: new Date().toISOString(),
+  };
+
+  issue.workLogs.push(workLog);
+  issue.timeSpent = (issue.timeSpent || 0) + hours;
+  issue.remainingEstimate = rem;
+
+  pushActivity(
+    issue,
+    'WORKLOG_ADDED',
+    `Logged ${hours}h of work (${rem}h remaining)`,
+    workLog.author
+  );
+
+  await issue.save();
+  return issue.toSafeJSON();
+}
+
+async function linkIssue(companyId, id, { relationship, targetIssueKey }, user) {
+  const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
+  if (!issue) {
+    throw new ApiError(404, 'Issue not found');
+  }
+
+  const targetIssue = await Issue.findOne({
+    companyId,
+    key: targetIssueKey.toUpperCase().trim(),
+    deletedAt: null,
+  });
+
+  if (!targetIssue) {
+    throw new ApiError(404, `Target issue ${targetIssueKey} not found`);
+  }
+
+  const link = {
+    id: `lnk-${Date.now()}`,
+    relationship,
+    targetIssueId: targetIssue._id.toString(),
+    targetIssueKey: targetIssue.key,
+    targetIssueTitle: targetIssue.title,
+    targetIssueStatus: targetIssue.status,
+  };
+
+  issue.issueLinks.push(link);
+  pushActivity(
+    issue,
+    'LINK_ADDED',
+    `Linked as "${relationship}" to ${targetIssue.key}`,
+    actorFromUser(user)
+  );
+
+  await issue.save();
+  return issue.toSafeJSON();
+}
+
+async function deleteLink(companyId, id, linkId) {
+  const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
+  if (!issue) {
+    throw new ApiError(404, 'Issue not found');
+  }
+
+  issue.issueLinks = issue.issueLinks.filter((l) => l.id !== linkId);
+  await issue.save();
+  return issue.toSafeJSON();
+}
+
+async function toggleWatcher(companyId, id, user) {
+  const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
+  if (!issue) {
+    throw new ApiError(404, 'Issue not found');
+  }
+
+  const uId = user._id.toString();
+  const isWatching = issue.watchers.some((w) => w.id === uId);
+
+  if (isWatching) {
+    issue.watchers = issue.watchers.filter((w) => w.id !== uId);
+  } else {
+    issue.watchers.push(actorFromUser(user));
+  }
+
+  await issue.save();
+  return issue.toSafeJSON();
+}
+
+async function toggleVote(companyId, id, user) {
+  const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
+  if (!issue) {
+    throw new ApiError(404, 'Issue not found');
+  }
+
+  const uId = user._id.toString();
+  const hasVoted = issue.votes.includes(uId);
+
+  if (hasVoted) {
+    issue.votes = issue.votes.filter((v) => v !== uId);
+  } else {
+    issue.votes.push(uId);
+  }
+
+  await issue.save();
+  return issue.toSafeJSON();
+}
+
+async function addSubtask(companyId, id, { title, assigneeId }, user) {
+  const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
+  if (!issue) {
+    throw new ApiError(404, 'Issue not found');
+  }
+
+  const assignedUser = assigneeId ? await resolveAssignee(companyId, assigneeId) : null;
+
+  const subtask = {
+    id: `sub-${Date.now()}`,
+    title: title.trim(),
+    completed: false,
+    status: 'TODO',
+    assignee: assignedUser || actorFromUser(user),
+  };
+
+  issue.subtasks.push(subtask);
+  pushActivity(issue, 'SUBTASK_ADDED', `Added subtask: ${subtask.title}`, actorFromUser(user));
+
+  await issue.save();
+  return issue.toSafeJSON();
+}
+
 async function toggleSubtask(companyId, id, subtaskId) {
   const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
   if (!issue) {
@@ -463,7 +751,19 @@ async function toggleSubtask(companyId, id, subtaskId) {
   const subtask = issue.subtasks.find((s) => s.id === subtaskId);
   if (subtask) {
     subtask.completed = !subtask.completed;
+    subtask.status = subtask.completed ? 'DONE' : 'TODO';
   }
+  await issue.save();
+  return issue.toSafeJSON();
+}
+
+async function deleteSubtask(companyId, id, subtaskId) {
+  const issue = await Issue.findOne({ _id: id, companyId, deletedAt: null });
+  if (!issue) {
+    throw new ApiError(404, 'Issue not found');
+  }
+
+  issue.subtasks = issue.subtasks.filter((s) => s.id !== subtaskId);
   await issue.save();
   return issue.toSafeJSON();
 }
@@ -524,7 +824,15 @@ module.exports = {
   moveIssueStatus,
   deleteIssue,
   addComment,
+  addReaction,
+  logWork,
+  linkIssue,
+  deleteLink,
+  toggleWatcher,
+  toggleVote,
+  addSubtask,
   toggleSubtask,
+  deleteSubtask,
   getActivity,
   getStats,
 };

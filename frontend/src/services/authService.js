@@ -1,5 +1,16 @@
 import apiClient from './apiClient';
 
+export async function registerRequest({ companyName, firstName, lastName, email, password }) {
+  const { data } = await apiClient.post('/auth/register', {
+    companyName,
+    firstName,
+    lastName,
+    email,
+    password,
+  });
+  return data.data;
+}
+
 export async function loginRequest({ email, password }) {
   const { data } = await apiClient.post('/auth/login', { email, password });
   return data.data;
