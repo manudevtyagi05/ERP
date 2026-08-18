@@ -94,3 +94,8 @@ export async function getIssueActivity(id) {
   const { data } = await apiClient.get(`/issues/${id}/activity`);
   return data.data;
 }
+
+export async function reorderIssues(sprintId, orderedIds) {
+  const { data } = await apiClient.patch('/issues/reorder', { sprintId, orderedIds });
+  return data.data;
+}

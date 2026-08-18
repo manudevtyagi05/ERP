@@ -19,6 +19,15 @@ const {
   updateMilestone,
   deleteMilestone,
 } = require('../controllers/milestone.controller');
+const {
+  listSprints,
+  createSprint,
+  updateSprint,
+  deleteSprint,
+  startSprint,
+  completeSprint,
+  getBacklog,
+} = require('../controllers/sprint.controller');
 const { authenticate, requirePermission } = require('../middleware/auth');
 const { requireCompanyPermOrProjectRole } = require('../middleware/projectPermission');
 const { PERMISSIONS } = require('../policies/permissions');
@@ -80,6 +89,36 @@ router.delete(
   '/:id/milestones/:milestoneId',
   requireCompanyPermOrProjectRole(PERMISSIONS.PROJECT_UPDATE, 'PROJECT_LEAD'),
   deleteMilestone
+);
+
+// ── Sprints & Backlog ───────────────────────────────────────────────────────
+// Same pattern: ADMIN/SUPERVISOR OR PROJECT_LEAD for writes; PROJECT_READ for reads.
+router.get('/:id/backlog', requirePermission(PERMISSIONS.PROJECT_READ), getBacklog);
+router.get('/:id/sprints', requirePermission(PERMISSIONS.PROJECT_READ), listSprints);
+router.post(
+  '/:id/sprints',
+  requireCompanyPermOrProjectRole(PERMISSIONS.PROJECT_UPDATE, 'PROJECT_LEAD'),
+  createSprint
+);
+router.patch(
+  '/:id/sprints/:sprintId',
+  requireCompanyPermOrProjectRole(PERMISSIONS.PROJECT_UPDATE, 'PROJECT_LEAD'),
+  updateSprint
+);
+router.delete(
+  '/:id/sprints/:sprintId',
+  requireCompanyPermOrProjectRole(PERMISSIONS.PROJECT_UPDATE, 'PROJECT_LEAD'),
+  deleteSprint
+);
+router.patch(
+  '/:id/sprints/:sprintId/start',
+  requireCompanyPermOrProjectRole(PERMISSIONS.PROJECT_UPDATE, 'PROJECT_LEAD'),
+  startSprint
+);
+router.patch(
+  '/:id/sprints/:sprintId/complete',
+  requireCompanyPermOrProjectRole(PERMISSIONS.PROJECT_UPDATE, 'PROJECT_LEAD'),
+  completeSprint
 );
 
 module.exports = router;
