@@ -193,6 +193,48 @@ async function deleteSprint(req, res) {
   }
 }
 
+async function getBacklog(req, res) {
+  try {
+    const { id: projectId } = req.params;
+    const project = await Project.findOne({ _id: projectId, companyId: req.user.companyId });
+    if (!project) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    const [sprints, issues] = await Promise.all([
+      Sprint.find({ companyId: req.user.companyId, projectId, status: { $ne: 'CLOSED' } }).sort({ createdAt: 1 }),
+      Issue.find({ companyId: req.user.companyId, projectId }).sort({ order: 1, createdAt: 1 }),
+    ]);
+
+    const issuesBySprintId = new Map();
+    const backlogIssues = [];
+
+    for (const issue of issues) {
+      const safe = issue.toSafeJSON();
+      const sprintIdStr = issue.sprintId ? issue.sprintId.toString() : null;
+      if (!sprintIdStr) {
+        backlogIssues.push(safe);
+      } else {
+        if (!issuesBySprintId.has(sprintIdStr)) issuesBySprintId.set(sprintIdStr, []);
+        issuesBySprintId.get(sprintIdStr).push(safe);
+      }
+    }
+
+    return res.json({
+      success: true,
+      data: {
+        sprints: sprints.map((s) => ({
+          ...s.toSafeJSON(),
+          issues: issuesBySprintId.get(s._id.toString()) || [],
+        })),
+        backlog: backlogIssues,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
+  }
+}
+
 module.exports = {
   listSprints,
   createSprint,
@@ -200,4 +242,5 @@ module.exports = {
   startSprint,
   completeSprint,
   deleteSprint,
+  getBacklog,
 };

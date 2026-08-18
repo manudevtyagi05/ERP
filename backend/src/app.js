@@ -9,38 +9,58 @@ const { connectDatabase } = require('./config/database');
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 
 // Dynamic CORS configuration allowing localhost, production frontend, and Vercel domains
 const allowedOrigins = [
   process.env.CLIENT_URL,
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:5174',
   'https://erp-amber-delta.vercel.app',
+  'https://erp-i5yf.vercel.app',
 ]
   .flatMap((url) => (url ? url.split(',') : []))
   .map((url) => url.trim())
   .filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (curl, mobile, server-to-server)
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (curl, mobile, server-to-server)
+    if (!origin) return callback(null, true);
 
-      const isAllowed =
-        allowedOrigins.includes(origin) ||
-        allowedOrigins.includes('*') ||
-        /\.vercel\.app$/.test(origin);
+    try {
+      const urlObj = new URL(origin);
+      const isVercel = /\.vercel\.app$/i.test(urlObj.hostname) || origin.includes('vercel.app');
+      const isLocal = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+      const isConfigured = allowedOrigins.some((o) => origin.startsWith(o) || o === '*');
 
-      if (isAllowed) {
+      if (isVercel || isLocal || isConfigured || process.env.NODE_ENV !== 'production') {
         return callback(null, true);
       }
-      return callback(new Error(`CORS origin not allowed: ${origin}`));
-    },
-    credentials: true,
-  })
-);
+      return callback(null, true);
+    } catch {
+      return callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'x-platform-api-key',
+    'sec-ch-ua',
+    'sec-ch-ua-mobile',
+    'sec-ch-ua-platform',
+  ],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
